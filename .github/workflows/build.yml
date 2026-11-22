@@ -1,0 +1,28 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  xbox:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install nxdk prerequisites
+        run: sudo apt-get update && sudo apt-get install -y clang lld llvm cmake bison flex
+
+      - name: Get nxdk
+        run: git clone --recursive --depth 1 --shallow-submodules https://github.com/XboxDev/nxdk.git ../nxdk
+
+      - name: Build
+        run: make NXDK_DIR=$GITHUB_WORKSPACE/../nxdk -j$(nproc)
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: 2H4U-xbox
+          path: |
+            bin/
+            2H4U.iso
