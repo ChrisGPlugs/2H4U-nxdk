@@ -19,7 +19,19 @@
 // original 2H4UX release, so existing saves show up under the same game).
 #define SAVE_DIR "E:\\UDATA\\32483455\\"
 
-#define PCRTC_START 0x00600800
+#define PCRTC_START       0x00600800
+#define PCRTC_INTR        0x00600100
+#define PCRTC_INTR_EN     0x00600140
+#define NV_PMC_INTR_EN_0  0x00000140
+
+// AC97 (MCPX audio) bus-master control registers, see nxdk hal/audio.c.
+#define AC97_MMIO         ((volatile unsigned char*)0xFEC00000)
+#define AC97_PCM_OUT_CR   0x11B
+#define AC97_PCM_OUT_SR   0x116
+#define AC97_SPDIF_CR     0x17B
+#define AC97_SPDIF_SR     0x176
+
+extern "C" void usbh_core_deinit(void);
 
 static uint32_t* g_buffers[2] = { NULL, NULL };
 // Physical addresses for the CRTC. The CPU sees these buffers through the
@@ -127,14 +139,45 @@ const char* Platform_SavePath(const char* fileName)
     return strdup(path);
 }
 
+// Quiet every device that can raise an interrupt into this program's code.
+// A quick reboot loads the dashboard over our memory; an interrupt arriving
+// at one of our handlers during that hangs the console (audio keeps looping
+// its last buffers, which is the popping heard on exit).
+static void quiesceHardware()
+{
+    // Audio: stop both AC97 output DMA engines with interrupts disabled,
+    // then clear any pending status. nxdk has no call that disconnects its
+    // audio ISR, but with the engines stopped it never fires.
+    if (SDL_WasInit(SDL_INIT_AUDIO))
+    {
+        AC97_MMIO[AC97_PCM_OUT_CR] = 0;
+        AC97_MMIO[AC97_SPDIF_CR] = 0;
+        AC97_MMIO[AC97_PCM_OUT_SR] = 0xFF;
+        AC97_MMIO[AC97_SPDIF_SR] = 0xFF;
+    }
+
+    // USB: close the pads, then shut down nxdk's OHCI stack, which
+    // disconnects its interrupt (SDL deliberately leaves this to the app).
+    if (SDL_WasInit(SDL_INIT_JOYSTICK))
+        SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER | SDL_INIT_JOYSTICK);
+    usbh_core_deinit();
+
+    // Video: no vblank interrupts, and show nxdk's own framebuffer again.
+    VIDEOREG(PCRTC_INTR_EN) = 0;
+    VIDEOREG(PCRTC_INTR) = 1;
+    VIDEOREG(NV_PMC_INTR_EN_0) = 0;
+    if (g_flip)
+        VIDEOREG(PCRTC_START) = g_physical[0];
+}
+
 void Platform_Exit(int code)
 {
     // Go straight back to the dashboard. exit() would get there too, but
-    // only after running static destructors and SDL shutdown, which closes
-    // the audio device and can block waiting on the Xbox audio thread.
-    // Everything that needs saving (config, high scores) is already written
-    // and closed by the time the game quits.
+    // only after running static destructors and SDL_Quit; SDL's Xbox audio
+    // shutdown re-runs XAudioInit and waits on the audio thread.
+    // Config and high scores are already written and closed by now.
     (void)code;
+    quiesceHardware();
     HalReturnToFirmware(HalQuickRebootRoutine);
 }
 
