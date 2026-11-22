@@ -78,7 +78,7 @@ else{
 
 //////////////////////////////////////////////////////////
 //Cf a la fin pour le modification du  tablo des cases.
-//Fcaseoccupée renvoie true si tout c'est bien passé, false si ca a pa pu pour cause de collision
+//FcaseoccupÃ©e renvoie true si tout c'est bien passÃ©, false si ca a pa pu pour cause de collision
 bool CFigure::FCaseOccupees(CBrick *** &MurBrick,bool force=false)
 {
 
@@ -245,7 +245,7 @@ case 6 :
 
 } // fin switch
 
-//Mettre ici l'appel a une fonction qui recoit TCaseOccupees[0][0] et le tableau de briques en paramètres
+//Mettre ici l'appel a une fonction qui recoit TCaseOccupees[0][0] et le tableau de briques en paramÃ¨tres
 //et renvoie true si pas de collision
 if (!collision(TCaseOccupees,MurBrick))
 {
@@ -273,14 +273,14 @@ else
     CaseOccupees[2][1]=TCaseOccupees[2][1];
     CaseOccupees[3][1]=TCaseOccupees[3][1];
     }
-    return false; // et case occupée renvoi la valeur d'avant.
+    return false; // et case occupÃ©e renvoi la valeur d'avant.
 }
 
 } // fin CaseOccupees()
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//renvoie true si la rotation a pu etre réalisé.
+//renvoie true si la rotation a pu etre rÃ©alisÃ©.
 bool CFigure::Rotation(CBrick *** &MurBrick)
 {
 
@@ -303,7 +303,7 @@ switch(forme)
 }
 
 //On appelle FCaseOccupees(); une fois que c'est fait.
-//Renvoie true si ca s'est bien passé.
+//Renvoie true si ca s'est bien passÃ©.
 if (FCaseOccupees(MurBrick)==true)
 {
     return true;
@@ -319,7 +319,7 @@ else
 
 }//Fin rotation
 //////////////////////////////////////////////////////////////////////
-//renvoie true si le mouvement a pu etre réalisé.
+//renvoie true si le mouvement a pu etre rÃ©alisÃ©.
 bool CFigure::ModifCoord(int a, int b,CBrick *** &MurBrick)
 {
     int oldPosX=posX;

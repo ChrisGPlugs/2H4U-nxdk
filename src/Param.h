@@ -50,10 +50,10 @@ public:
     CParam();
     //Initialisation (on charge le fichier et on remplie les variables).
     void initParam(const char*);
-    //Une fois des modifications effectuée (donc juste avant de lancer le jeu), on sauve les modifications.
+    //Une fois des modifications effectuÃ©e (donc juste avant de lancer le jeu), on sauve les modifications.
     void saveParam();
 
-    //Fonctions pour modifier et récupérer des paramètres :
+    //Fonctions pour modifier et rÃ©cupÃ©rer des paramÃ¨tres :
 
     void flipSon();
     void flipMusique();

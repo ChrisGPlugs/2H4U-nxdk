@@ -51,7 +51,7 @@ SDL_Surface* myImgTerrain;
 
 SDL_Rect myRectTerrain;
 
-//Surface permettant de stocker les figures a présenter avant :
+//Surface permettant de stocker les figures a prÃ©senter avant :
 SDL_Surface* *m_pImgFigure;
 int m_iNextFig;
 

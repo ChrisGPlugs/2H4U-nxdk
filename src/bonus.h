@@ -24,7 +24,7 @@
 
 #include "sdl_includes.h"
 
-//Nombre de types de bonus différents
+//Nombre de types de bonus diffÃ©rents
 #define NB_BONUS 11
 //Liste des bonus
 #define B_ADD_BALLE 0
@@ -39,7 +39,7 @@
 #define B_EXTRA_LARGE_RAQ 9
 #define B_EXTRA_SMALL_RAQ 10
 
-//Nombre maximum de bonus en jeu en même temps.
+//Nombre maximum de bonus en jeu en mÃªme temps.
 #define MAX_BONUS 3
 
 //On a une chance sur X d'avoir un bonus.

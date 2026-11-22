@@ -35,7 +35,7 @@ void CBonus::initBonus()
         m_pBonus[i]=IMG_Load(buffer);
     }
 
-    //Tableau qui gère les bonus.
+    //Tableau qui gÃ¨re les bonus.
     for (int i=0;i<MAX_BONUS;i++)
     {
         m_stBonusInfo[i].actif=false;
@@ -73,7 +73,7 @@ void CBonus::mayAddBonus(int x,int y,double vitesse)
             i=-1;
         }
     }
-    //S'il ya des bonus libres, on va peut être en créer un.
+    //S'il ya des bonus libres, on va peut Ãªtre en crÃ©er un.
     if (i!=-1)
     {
         //Ca donne une chance sur 10 d'avoir un bonus.
@@ -88,7 +88,7 @@ void CBonus::mayAddBonus(int x,int y,double vitesse)
     }
 }
 
-//Penser a modifier l'indice du tableau dans la fonction appellante si nécessaire.
+//Penser a modifier l'indice du tableau dans la fonction appellante si nÃ©cessaire.
 int CBonus::deplacerBonus(int bonusObtenu[], const int& iElapsedTime, SDL_Rect* RaqRect)
 {
     int nbObtenus=0;

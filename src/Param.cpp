@@ -38,7 +38,7 @@ void CParam::initParam(const char* czChemin)
 
     if (fichier != NULL)
     {
-        // On peut lire et écrire dans le fichier
+        // On peut lire et Ã©crire dans le fichier
         fscanf(fichier, "%d %d %d %d %d", &m_iSon, &m_iMusique, &m_iFullscreen, &m_iClavier, &m_iLangue);
         fclose(fichier);
         m_bNew=false;
@@ -47,12 +47,12 @@ void CParam::initParam(const char* czChemin)
     {
         //Si le fichier n'existe pas, on va ignorer l'erreur
         fprintf( stderr, "Creating file : config.dat\n");
-        //Et on va créer le fichier.
+        //Et on va crÃ©er le fichier.
         m_iSon=1; //ON
         m_iMusique=1; //ON
         m_iFullscreen=0; //ON
         m_iClavier=1; //QWERTY
-        m_iLangue=0; //Français
+        m_iLangue=0; //FranÃ§ais
         m_bNew=true;
         saveParam();
     }
@@ -133,7 +133,7 @@ void CParam::saveParam()
     }
 }
 
-//Pour changer les paramètres de l'extérieur.
+//Pour changer les paramÃ¨tres de l'extÃ©rieur.
 void CParam::flipSon()
 {
     if (m_iSon==0) m_iSon=1;

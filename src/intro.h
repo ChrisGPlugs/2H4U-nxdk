@@ -22,7 +22,7 @@
 
 #include "sdl_includes.h"
 
-//Attente du début
+//Attente du dÃ©but
 #define I_DEBUT 1000.
 
 //Logo Team

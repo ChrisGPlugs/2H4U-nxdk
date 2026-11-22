@@ -27,7 +27,7 @@ private:
 	long m_lLastRender;
 	long m_lLastThink;
 
-	int m_iFrameLenght; //Durée en millisecondes d'une frame.
+	int m_iFrameLenght; //DurÃ©e en millisecondes d'une frame.
 
 	bool m_bFullscreen;
 

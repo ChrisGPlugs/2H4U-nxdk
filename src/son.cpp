@@ -69,7 +69,7 @@ void CSon::initSon(bool musiqueOn, bool sonOn)
 
     if (m_bSonOn==true)
     {
-        //Chargement des différents effets.
+        //Chargement des diffÃ©rents effets.
         effet[S_CASSE_BRIQUE] = Mix_LoadWAV( "D:\\data\\sons\\balle_brique.wav" );
         effet[S_REBOND_RAQ] = Mix_LoadWAV( "D:\\data\\sons\\balle_raquette.wav" );
         effet[S_CASSE_LIGNE] = Mix_LoadWAV( "D:\\data\\sons\\detruit_ligne.wav" );
@@ -86,7 +86,7 @@ void CSon::initSon(bool musiqueOn, bool sonOn)
         {
             if (effet[i]==NULL)
             {
-                fprintf(stderr,"erreur chargement effets ds initSon() : numéro %d\n",i);
+                fprintf(stderr,"erreur chargement effets ds initSon() : numÃ©ro %d\n",i);
 
 #ifdef _XBOX
 		XLaunchNewImage(NULL, NULL);

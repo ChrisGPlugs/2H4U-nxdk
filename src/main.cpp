@@ -18,22 +18,22 @@
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-//entrée sortie etc standard.
+//entrÃ©e sortie etc standard.
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
 
-//Le moteur global de jeu dont on hérite
+//Le moteur global de jeu dont on hÃ©rite
 #include "Engine.h"
 //Le moteur du menu
 #include "menu.h"
-//Pour la gestion de paramètres.
+//Pour la gestion de paramÃ¨tres.
 #include "Param.h"
 //include pour l'objet jeu.
 #include "jeu.h"
 //Include pour la gestion des highscores.
 #include "highscore.h"
-//Permet de gérer l'intro.
+//Permet de gÃ©rer l'intro.
 #include "intro.h"
 //Launcher pour choisir la langue et le clavier
 #include "launcher.h"
@@ -42,8 +42,8 @@
 
 
 //Pour la gestion du clavier, vue qu'on a besoin que de quelques touches.
-//Plutot que d'accéder aux cases 0, 1 etc... on utilise des define.
-#define K_NBKEYS  12 //Nombre de touches définies.
+//Plutot que d'accÃ©der aux cases 0, 1 etc... on utilise des define.
+#define K_NBKEYS  12 //Nombre de touches dÃ©finies.
 #define K_ENTER   0
 #define K_LEFT    1
 #define K_RIGHT   2
@@ -57,7 +57,7 @@
 #define K_P       10
 #define K_ESCAPE  11
 
-//Constantes représentant les différentes phases du programme.
+//Constantes reprÃ©sentant les diffÃ©rentes phases du programme.
 #define P_MENU 0 //Pendant le menu
 #define P_NEW_GAME  1 //Nouvelle partie
 #define P_GAME  2 //Pendant le jeu.
@@ -81,7 +81,7 @@ private:
     int m_iPhase;
 
     //Pour la gestion du clavier
-    //Attention : Pas la même gestion pour le jeu et pour le menu.
+    //Attention : Pas la mÃªme gestion pour le jeu et pour le menu.
     bool m_iKey[K_NBKEYS];
 
     CMenu m_Menu;
@@ -124,7 +124,7 @@ int main(int argc, char* argv[])
 }
 //***********************************************************************
 //Fonctions de CMyEngine.
-//Appellé par Init.
+//AppellÃ© par Init.
 void CMyEngine::ParamInit(int iWidth,int iHeight)
 {
 
@@ -132,7 +132,7 @@ void CMyEngine::ParamInit(int iWidth,int iHeight)
     SetIcon("D:\\data\\images\\icone.png");
 #endif
 
-    //Dans un premier temps, on charge le fichier de paramètres.
+    //Dans un premier temps, on charge le fichier de paramÃ¨tres.
     m_Param.initParam("U:\\config.dat");
 	
 #ifdef _XBOX
@@ -141,7 +141,7 @@ void CMyEngine::ParamInit(int iWidth,int iHeight)
 
     m_Highscore.loadHighscore("U:\\HighScores.dat");
 
-        //Puis on fait plein écran ou fenetre suivant le cas.
+        //Puis on fait plein Ã©cran ou fenetre suivant le cas.
         if (m_Param.getFullscreen()==0)
         {
             SDL_ShowCursor(true);
@@ -157,12 +157,12 @@ void CMyEngine::ParamInit(int iWidth,int iHeight)
         }
 
 }
-//Appellé par Init.
+//AppellÃ© par Init.
 void CMyEngine::AdditionalInit()
 {
     srand(time(NULL));
 
-    //Librairie d'écriture.
+    //Librairie d'Ã©criture.
     TTF_Init();
 
     if (m_Param.getNew()==true)
@@ -172,7 +172,7 @@ void CMyEngine::AdditionalInit()
     }
     else
     {
-        //On prépare l'entrée vers l'intro.
+        //On prÃ©pare l'entrÃ©e vers l'intro.
         m_iPhase=P_INTRO;
         m_Param.getTxtLang(langTxt);
         m_Param.getTxtLang(langTxt);
@@ -182,7 +182,7 @@ void CMyEngine::AdditionalInit()
     for (int i=0;i<K_NBKEYS;i++) {m_iKey[i]=false;}
 
 }
-//Appellé par End.
+//AppellÃ© par End.
 void CMyEngine::AdditionalEnd()
 {
 
@@ -213,11 +213,11 @@ void CMyEngine::Think( const int& iElapsedTime )
 
     switch(m_iPhase)
     {
-        //Ce case est placé en premier car il est celui qui nécessite le plus de rapidité d'execution.
+        //Ce case est placÃ© en premier car il est celui qui nÃ©cessite le plus de rapiditÃ© d'execution.
         case P_GAME:
 
             moveStrafe=0;
-            //Dans un premier temps, on réagit par rapport aux inputs.
+            //Dans un premier temps, on rÃ©agit par rapport aux inputs.
 
             //*********************************************************
             //1)Gestion de la raquette
@@ -243,7 +243,7 @@ void CMyEngine::Think( const int& iElapsedTime )
             {
                 moveStrafe=1;
             }
-            //Va gérer aussi la descente automatique, et la destruction d'éventuelles lignes.
+            //Va gÃ©rer aussi la descente automatique, et la destruction d'Ã©ventuelles lignes.
             if (m_Jeu.allMoveFigure(moveStrafe,m_iKey[K_S],m_iKey[K_Z],m_iKey[K_SPACE])==true)
             {
                 m_iKey[K_S]=false;
@@ -252,7 +252,7 @@ void CMyEngine::Think( const int& iElapsedTime )
             m_Jeu.flipFigure();
             //*********************************************************
 
-            //Gestion du mouvement de la balle ET en meme temps des briques cassées, via la meme fonction.
+            //Gestion du mouvement de la balle ET en meme temps des briques cassÃ©es, via la meme fonction.
             m_Jeu.deplacerBalle(iElapsedTime);
 
             if (m_iKey[K_P]==true)
@@ -269,7 +269,7 @@ void CMyEngine::Think( const int& iElapsedTime )
                 for (int i=0;i<K_NBKEYS;i++) {m_iKey[i]=false;}
             }
 
-            //Rémise a 0 des touches nécessaires (Celle qui sert au changement d'angle).
+            //RÃ©mise a 0 des touches nÃ©cessaires (Celle qui sert au changement d'angle).
             m_iKey[K_Z]=false;
             m_iKey[K_SPACE]=false;
             m_iKey[K_P]=false;
@@ -402,8 +402,8 @@ void CMyEngine::Think( const int& iElapsedTime )
             for (int i=0;i<K_NBKEYS;i++) {m_iKey[i]=false;}
         break;
         case P_NEW_GAME:
-            //Cette phase sert a gerer la transition avec le jeu, par exemple avec un écran de chargement.
-            //Ou encore un décompte de temps et bloquant.
+            //Cette phase sert a gerer la transition avec le jeu, par exemple avec un Ã©cran de chargement.
+            //Ou encore un dÃ©compte de temps et bloquant.
             bool b_musique,b_sons;
             if(m_Param.getMusique()==0) b_musique=false;
             else b_musique=true;
@@ -442,7 +442,7 @@ void CMyEngine::Think( const int& iElapsedTime )
     //tempTest1=SDL_GetTicks()-tempTest1;
 
 }
-//Affichage à partir des données disponibles.
+//Affichage Ã  partir des donnÃ©es disponibles.
 void CMyEngine::Render( SDL_Surface* pDestSurface )
 {
     //tempTest2=SDL_GetTicks();
@@ -658,7 +658,7 @@ void CMyEngine::KeyDown(const int& iKeyEnum)
     }
 }
 
-//Rien encore de définie, car non utilisé par le menu (mais par le jeu).
+//Rien encore de dÃ©finie, car non utilisÃ© par le menu (mais par le jeu).
 void CMyEngine::KeyUp (const int& iKeyEnum)
 {
     switch(m_iPhase)
@@ -714,14 +714,14 @@ void CMyEngine::KeyUp (const int& iKeyEnum)
 }
 
 //Ici, on fait une mise en pause du jeu.
-//A définir dans le jeu.
+//A dÃ©finir dans le jeu.
 void CMyEngine::WindowInactive()
 {
     switch(m_iPhase)
     {
         case P_MENU:
         //Pour le menu, ca ne change rien, donc on ne fait rien.
-        //A voir éventuellement si animations dans le menu.
+        //A voir Ã©ventuellement si animations dans le menu.
         break;
         case P_NEW_GAME:
 

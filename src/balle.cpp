@@ -70,12 +70,12 @@ int CBalle::getStatutBalle()
     return active;
 }
 
-//Renvoie vrai si la balle est détruite, 0 sinon.
+//Renvoie vrai si la balle est dÃ©truite, 0 sinon.
 bool CBalle::deplacer(const int& iElapsedTime, CTerrain &terrain, SDL_Rect* RaqRect, CSon &mySon, CBonus &myBonus)
 {
     int maxX,maxY,xmid,raqmid,retColl;
     double r,teta,diff,oldX,oldY;
-    //On passe par des int pour les cas négatifs.
+    //On passe par des int pour les cas nÃ©gatifs.
     double x = xBalle;
     double y = yBalle;
 
@@ -96,7 +96,7 @@ bool CBalle::deplacer(const int& iElapsedTime, CTerrain &terrain, SDL_Rect* RaqR
     int yDep=(int)oldY;
 
     //Gestion des collisions avec les briques.
-    //Attention : la fonction peut modifier x et y, si nécessaire.
+    //Attention : la fonction peut modifier x et y, si nÃ©cessaire.
     //Cela permet de replacer la balle.
     retColl=terrain.collisionBriques(xa,ya,xDep,yDep,myRectBalle.w);
     switch (retColl)
@@ -122,7 +122,7 @@ bool CBalle::deplacer(const int& iElapsedTime, CTerrain &terrain, SDL_Rect* RaqR
             y=oldY;
         break;
         default:
-        fprintf( stderr, "Erreur : Valeur non valable renvoyée par collisionBriques\n");
+        fprintf( stderr, "Erreur : Valeur non valable renvoyÃ©e par collisionBriques\n");
     }
 
     maxX=(terrainRect->x+terrainRect->w)-myRectBalle.w;
@@ -171,7 +171,7 @@ bool CBalle::deplacer(const int& iElapsedTime, CTerrain &terrain, SDL_Rect* RaqR
             xmid = (int)x + myRectBalle.w/2;
             raqmid = RaqRect->x + RaqRect->w/2;
 
-            //Formule qui détermine l'angle de renvoie.
+            //Formule qui dÃ©termine l'angle de renvoie.
             //A changer si l'on veut changer le style de renvoie.
             diff=(double)(raqmid-xmid);
 
@@ -190,7 +190,7 @@ bool CBalle::deplacer(const int& iElapsedTime, CTerrain &terrain, SDL_Rect* RaqR
 
             teta=((diff/ (RaqRect->w/2. + myRectBalle.w/2.))*(3.14159265358979323846/2.)) + (3.14159265358979323846/2.);
 
-            //Permet d'éviter les balles trop horizontales.
+            //Permet d'Ã©viter les balles trop horizontales.
             if (teta<0.9) {teta=0.9;}
             if (teta>2.60) {teta=2.60;}
             dX=r*cos(teta);

@@ -27,7 +27,7 @@ CEngine::CEngine()
 
 	m_lLastRender   = 0;
 	m_lLastThink    = 0;
-	//m_iFrameLenght  = 15; //Durée en millisecondes d'une frame.
+	//m_iFrameLenght  = 15; //DurÃ©e en millisecondes d'une frame.
     m_iFrameLenght=0;
 
 	m_iWidth		= 800;
@@ -58,12 +58,12 @@ void CEngine::SetSize(const int& iWidth, const int& iHeight)
 	m_pScreen = SDL_SetVideoMode( iWidth, iHeight, 32, SDL_HWSURFACE | SDL_DOUBLEBUF | SDL_FULLSCREEN);
 }
 
-//Même chose que précédemment, mais en plein écran.
+//MÃªme chose que prÃ©cÃ©demment, mais en plein Ã©cran.
 void CEngine::SetFullScreen(const int& iWidth, const int& iHeight)
 {
     m_iWidth  = iWidth;
 	m_iHeight = iHeight;
-	//A vérifier : l'ancienne surface de m_pScreen est-elle supprimée ?
+	//A vÃ©rifier : l'ancienne surface de m_pScreen est-elle supprimÃ©e ?
 	m_pScreen = SDL_SetVideoMode( iWidth, iHeight, 32, SDL_HWSURFACE | SDL_ANYFORMAT | SDL_DOUBLEBUF |SDL_FULLSCREEN);
 }
 
@@ -88,7 +88,7 @@ void CEngine::flipFullScreen(bool fullscreen)
 /** Initialize SDL, the window and the additional data. **/
 void CEngine::Init()
 {
-    //+ éventuellement d'autres.
+    //+ Ã©ventuellement d'autres.
 	#ifdef NO_SOUND_2H4U
 		if ( SDL_Init( SDL_INIT_VIDEO |  SDL_INIT_TIMER ) < 0 )
 	#else
@@ -104,22 +104,22 @@ void CEngine::Init()
 #endif
 	}
 
-    //Ligne rajouté, au cas ou le programme est quitté violement (kill).
+    //Ligne rajoutÃ©, au cas ou le programme est quittÃ© violement (kill).
     atexit(SDL_Quit);
 
 #ifdef _XBOX
 	SDL_putenv("SDL_VIDEO_WINDOW_POS=center");
 #else
-    putenv("SDL_VIDEO_WINDOW_POS=center"); //pour centrer la fenêtre
+    putenv("SDL_VIDEO_WINDOW_POS=center"); //pour centrer la fenÃªtre
 #endif
 
-    //Chargement des paramètres, afin de choisir si fenêtre ou plein écran
+    //Chargement des paramÃ¨tres, afin de choisir si fenÃªtre ou plein Ã©cran
     ParamInit(m_iWidth,m_iHeight);
 
 	// If we fail, return error.
 	if ( m_pScreen == NULL )
 	{
-		fprintf( stderr, "Impossible de définir la vidéo: %s\n", SDL_GetError() );
+		fprintf( stderr, "Impossible de dÃ©finir la vidÃ©o: %s\n", SDL_GetError() );
 
 #ifdef _XBOX
 		XLaunchNewImage(NULL, NULL);
@@ -143,7 +143,7 @@ void CEngine::Init()
 	AdditionalInit();
 }
 
-//Le jeu sera en fait appellé par le menu.
+//Le jeu sera en fait appellÃ© par le menu.
 //Pour revenir au menu, on fera un return.
 /** The main loop. **/
 void CEngine::Start()
@@ -169,7 +169,7 @@ void CEngine::Start()
 			DoRender();
 
 		}
-        //On se passe du Delay, car l'affichage est limité (60 images par secondes)
+        //On se passe du Delay, car l'affichage est limitÃ© (60 images par secondes)
 	}
 
 	AdditionalEnd();
@@ -276,13 +276,13 @@ char buffer[1000];
 			KeyUp( event.key.keysym.sym );
 			break;
 
-		//Rajouter la gestion de 4 ou 5 touches supplémentaires.
+		//Rajouter la gestion de 4 ou 5 touches supplÃ©mentaires.
 
 		case SDL_QUIT:
 			m_bQuit = true;
 			break;
 
-		//Si on minimize la fenêtre, le jeu passera en pause.
+		//Si on minimize la fenÃªtre, le jeu passera en pause.
 		case SDL_ACTIVEEVENT:
 			if ( (event.active.state & SDL_APPACTIVE) || (event.active.state & SDL_APPINPUTFOCUS)) {
 				if ( event.active.gain ) {
@@ -383,7 +383,7 @@ const char* CEngine::GetTitle()
 	return m_czTitle;
 }
 
-//Nécessite SDL_Image. Recoit le chemin d'accès de l'icone en paramètre.
+//NÃ©cessite SDL_Image. Recoit le chemin d'accÃ¨s de l'icone en paramÃ¨tre.
 void CEngine::SetIcon(const char* czChemin)
 {
     SDL_WM_SetIcon(IMG_Load(czChemin), NULL);

@@ -33,8 +33,8 @@
 #define SC_CASE_CASSEE 10
 #define SC_DESCENTE 10
 #define SC_BONUS 1000 //Chaque bonus donne des points
-#define SC_BONUS_SCORE 10000 //Bonus spécial.
-#define SC_EMPTY_TERRAIN 100000 //Terrain a été vidé.
+#define SC_BONUS_SCORE 10000 //Bonus spÃ©cial.
+#define SC_EMPTY_TERRAIN 100000 //Terrain a Ã©tÃ© vidÃ©.
 
 #include "sdl_includes.h"
 
@@ -89,8 +89,8 @@ int m_iNbVies; //Nombre de vies
 int m_iNbBalles; //Nombre de balles en jeu
 long m_iLastDescente; //Timer du dernier moment ou le bloc est descendu.
 int m_iDureeAttente; //Temps entre deux descente d'un bloc.
-long m_iLastStrafe; //Timer du dernier moment ou le bloc a bougé latéralement.
-int m_iDureeStrafe; //Temps entre deux déplacements latéraux.
+long m_iLastStrafe; //Timer du dernier moment ou le bloc a bougÃ© latÃ©ralement.
+int m_iDureeStrafe; //Temps entre deux dÃ©placements latÃ©raux.
 long m_iLastChute; //Timer du dernier moment ou le bloc est descendu par le joueur.
 int m_iDureeChute; //Temps entre deux descentes.
 int m_iNbLignesDetruites;

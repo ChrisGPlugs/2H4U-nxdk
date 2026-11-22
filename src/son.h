@@ -20,11 +20,11 @@
 #ifndef Son
 #define Son
 
-//A modifier pour chaque nouveau effet ajouté.
+//A modifier pour chaque nouveau effet ajoutÃ©.
 #define MAX_SONS 11
 
 #define S_CASSE_BRIQUE 0
-#define S_REBOND_RAQ 1 //Non encore utilisé.
+#define S_REBOND_RAQ 1 //Non encore utilisÃ©.
 #define S_CASSE_LIGNE 2
 #define S_POSE_BRIQUE 3
 #define S_REBOND_MUR 4

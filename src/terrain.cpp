@@ -141,7 +141,7 @@ void CTerrain::rndFillTerrain(int nbLignes)
     {
         for (int i=0;i<NBCASEX;i++)
         {
-            if (i!=j) //Pour éviter que toutes les cases soient remplies
+            if (i!=j) //Pour Ã©viter que toutes les cases soient remplies
             {
                 if (rand()%2==0) m_pBrick[i][j]->initBrick(1,rand()%7);
             }
@@ -169,27 +169,27 @@ void CTerrain::deleteTerrain()
 }
 
 /*
-Cette fonction permet de gérer la collision entre la balle et le mur de briques.
-Elle recoit en paramètre la position de de la balle avant le mouvement (les oldXb, oldYb),
-ainsi que la position après le mouvement (xb, yb).
-Il s'agit bien entendu de la position du coin supérieur gauche de la balle.
-Elle recoit aussi la largeur de la balle (sb), considérée comme un carré.
+Cette fonction permet de gÃ©rer la collision entre la balle et le mur de briques.
+Elle recoit en paramÃ¨tre la position de de la balle avant le mouvement (les oldXb, oldYb),
+ainsi que la position aprÃ¨s le mouvement (xb, yb).
+Il s'agit bien entendu de la position du coin supÃ©rieur gauche de la balle.
+Elle recoit aussi la largeur de la balle (sb), considÃ©rÃ©e comme un carrÃ©.
 Cette fonction retourne un entier indiquant le type de collision :
 0 pour pas de collision, 1 pour collision horizontale, 2 pour verticale, 3 pour horizontal et vertical.
-Une collision horizontale signifie que la balle a frappé le dessus d'une ou plusieurs briques.
-Une collision verticale signifie que la balle a frappé le coté d'une ou plusieurs briques.
+Une collision horizontale signifie que la balle a frappÃ© le dessus d'une ou plusieurs briques.
+Une collision verticale signifie que la balle a frappÃ© le cotÃ© d'une ou plusieurs briques.
 Cette fonction est une des plus complexes, a terme, du programme.
 
-Voici en gros le déroulement qu'elle devrait avoir :
+Voici en gros le dÃ©roulement qu'elle devrait avoir :
 -On regarde sur quelles briques est la balle, sachant qu'elle peut etre sur 1, 2 ou 4 briques.
 -On regarde les briques qui existent.
--On réduit la vie des briques.
+-On rÃ©duit la vie des briques.
 -On renvoi la zone d'impact : rien, vertical, horizontal, ou horizontal et vertical (si possible).
 
 */
 
 //Cette version fonctionne parfaitement.
-//Approximation : on suppose que le dx et le dy de la balle sont très petits.
+//Approximation : on suppose que le dx et le dy de la balle sont trÃ¨s petits.
 int CTerrain::collisionBriques(int xb, int yb, int oldXb, int oldYb, int sb)
 {
     int brickX, brickY, tempX, tempY;
@@ -202,7 +202,7 @@ int CTerrain::collisionBriques(int xb, int yb, int oldXb, int oldYb, int sb)
 
     if (yb<myRectTerrain.y + m_iTailleBrick*NBCASEY)
     {
-        //Coordonnées de la case dans laquelle est le point en haut a gauche du carré de la balle.
+        //CoordonnÃ©es de la case dans laquelle est le point en haut a gauche du carrÃ© de la balle.
         tempX=(xb-myRectTerrain.x)/m_iTailleBrick;
         tempY=(yb-myRectTerrain.y)/m_iTailleBrick;
         if (((xb-myRectTerrain.x)%m_iTailleBrick)==0)
@@ -306,7 +306,7 @@ int CTerrain::collisionBriques(int xb, int yb, int oldXb, int oldYb, int sb)
         {
             int xt=myRectTerrain.x + brickX*m_iTailleBrick;
             int yt=myRectTerrain.y + brickY*m_iTailleBrick;
-            //Valeur absolue du coefficient directeur du déplacement de la balle.
+            //Valeur absolue du coefficient directeur du dÃ©placement de la balle.
             if (xb-oldXb==0) return 2;
             if (oldXb-xt==0) return 2;
 
@@ -321,7 +321,7 @@ int CTerrain::collisionBriques(int xb, int yb, int oldXb, int oldYb, int sb)
             }
 
             cdB = ((yb-oldYb)*1.0)/(xb-oldXb);
-            //Valeur absolue du coefficient directeur du déplacement entre la balle et la brique.
+            //Valeur absolue du coefficient directeur du dÃ©placement entre la balle et la brique.
             cdO = ((oldYb-yt)*1.0)/(oldXb-xt);
 
 
@@ -346,7 +346,7 @@ int CTerrain::collisionBriques(int xb, int yb, int oldXb, int oldYb, int sb)
 
 }
 
-// :D Permet de savoir si la balle a détruite une ligne.
+// :D Permet de savoir si la balle a dÃ©truite une ligne.
 bool CTerrain::getBalleDestruction(int &nbBriquesCassees)
 {
     nbBriquesCassees=m_iNbBriquesDestroy;
@@ -445,7 +445,7 @@ bool CTerrain::rotationFigure()
     return myFigure.Rotation(m_pBrick);
 }
 
-//On déplace la figure en x et y
+//On dÃ©place la figure en x et y
 bool CTerrain::moveFigure(int a,int b)
 {
     return myFigure.ModifCoord(a, b, m_pBrick);
@@ -530,7 +530,7 @@ bool CTerrain::isFullLine(int y,bool gauche)
 
 }
 
-//Renvoie le nombre de lignes totalement cassées
+//Renvoie le nombre de lignes totalement cassÃ©es
 int CTerrain::findEmptyLine()
 {
     int nbEmpty=0;
@@ -547,7 +547,7 @@ int CTerrain::findEmptyLine()
 }
 
 //Indique si une ligne est totalement vide
-//Donc vidée par la balle.
+//Donc vidÃ©e par la balle.
 bool CTerrain::isEmptyLine(int y,bool gauche)
 {
     int somme=0;

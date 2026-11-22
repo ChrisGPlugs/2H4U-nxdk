@@ -33,7 +33,7 @@ void CHighscore::loadHighscore(const char* czChemin)
 
     if (fichier != NULL)
     {
-        //On rÈcupËre la chaine
+        //On r√©cup√®re la chaine
         fscanf(fichier, "%ld %ld %ld %ld %ld", &hs[0], &hs[1],&hs[2], &hs[3], &hs[4]);
         fclose(fichier);
 
@@ -41,22 +41,22 @@ void CHighscore::loadHighscore(const char* czChemin)
         {
             fprintf(stderr,"Erreur non critique : fichier de highscores corrompu\n");
             for (int i=0;i<5;i++)   hs[i]=0;
-            //CrÈation du fichier.
+            //Cr√©ation du fichier.
             creerFichierHighscore();
         }
     }
     else
     {
         //Si le fichier n'existe pas, on va ignorer l'erreur
-        fprintf( stderr, "Erreur non critique : fichier de highscores n'existe pas --> CrÈÈ.\n");
+        fprintf( stderr, "Erreur non critique : fichier de highscores n'existe pas --> Cr√©√©.\n");
         for (int i=0;i<5;i++)   hs[i]=0;
-        //CrÈation du fichier.
+        //Cr√©ation du fichier.
         creerFichierHighscore();
     }
 
 }
 
-//Fonction de dÈcryptage du fichier de higscore.
+//Fonction de d√©cryptage du fichier de higscore.
 bool CHighscore::uncryptScores()
 {
     long cle=CLE;
@@ -92,12 +92,12 @@ void CHighscore::cryptScores()
         hs[i]+=(i+1);
         hs[i]*=ajout;
         hs[i]+=ajout-cle;
-        //On fais un cryptage XOR (il faut que hs diffÈrent de 0 sinon faille).
+        //On fais un cryptage XOR (il faut que hs diff√©rent de 0 sinon faille).
         hs[i]^=cle;
     }
 }
 
-//Pour sauvegarder les scores, cryptÈs.
+//Pour sauvegarder les scores, crypt√©s.
 void CHighscore::creerFichierHighscore()
 {
     FILE* fichier = NULL;
@@ -116,7 +116,7 @@ void CHighscore::creerFichierHighscore()
     else
     {
         //Si le fichier n'existe pas, on va ignorer l'erreur
-        fprintf( stderr, "Erreur non critique : CrÈation du fichier de Highscore impossible. Tant pis.\n");
+        fprintf( stderr, "Erreur non critique : Cr√©ation du fichier de Highscore impossible. Tant pis.\n");
     }
 }
 

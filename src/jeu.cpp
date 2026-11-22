@@ -57,7 +57,7 @@ void CJeu::initJeu(bool musiqueOn, bool sonsOn, char lang[MAX_LANG][256])
     m_iDureeChute=40;
     m_iLastChute=SDL_GetTicks();
 
-    playing=true; // variable permettant de déterminer si le joueur n'a pas perdu.
+    playing=true; // variable permettant de dÃ©terminer si le joueur n'a pas perdu.
 
     modifRaquette=-1;
 
@@ -75,7 +75,7 @@ void CJeu::initJeu(bool musiqueOn, bool sonsOn, char lang[MAX_LANG][256])
     m_pScreenshot=SDL_CreateRGBSurface(SDL_HWSURFACE, 800, 600, 32, 0, 0, 0, 0);
     m_pSpriteOver=NULL;
 
-    //Chargement de la police d'écriture des chiffres :
+    //Chargement de la police d'Ã©criture des chiffres :
     policeChiffres = TTF_OpenFont("D:\\data\\DS-DIGIB.TTF", 35);
 
     makeChiffre(m_pScore,m_iScore);
@@ -172,7 +172,7 @@ void CJeu::reprendreJeu()
     mySon.resumeMusic();
 }
 
-//Fonction qui permet de gérer la durée entre deux descentes puor une briques
+//Fonction qui permet de gÃ©rer la durÃ©e entre deux descentes puor une briques
 void CJeu::setDureeAttente()
 {
     m_iDureeAttente=(1000-m_iNiveau*75);
@@ -235,7 +235,7 @@ bool CJeu::gameOver()
     return !playing;
 }
 
-//Permet d'enregistrer la dernière image du jeu, pour lorsque l'on a perdu.
+//Permet d'enregistrer la derniÃ¨re image du jeu, pour lorsque l'on a perdu.
 void CJeu::saveLastDisplay(char lang[MAX_LANG][256])
 {
     mySon.playEffet(S_GAME_OVER);
@@ -322,8 +322,8 @@ void CJeu::deleteJeu()
 
 }
 
-//Gère le jeu lorsque des lignes sont détruites.
-//A gérer mieux ca va pas du tout !!
+//GÃ¨re le jeu lorsque des lignes sont dÃ©truites.
+//A gÃ©rer mieux ca va pas du tout !!
 void CJeu::addLignes(int nbLignes)
 {
     int suivant;
@@ -343,7 +343,7 @@ void CJeu::addLignes(int nbLignes)
     makeChiffre(m_pSuivant,suivant);
 }
 
-//déplacements de la figure.
+//dÃ©placements de la figure.
 bool CJeu::allMoveFigure(int moveStrafe,bool bas,bool rotation, bool down)
 {
 
@@ -378,7 +378,7 @@ bool CJeu::allMoveFigure(int moveStrafe,bool bas,bool rotation, bool down)
             nbDescentes++;
         }
         addToScore(SC_DESCENTE*nbDescentes);
-        //On force le test de descente d'une ligne, qui fait poser la pièce.
+        //On force le test de descente d'une ligne, qui fait poser la piÃ¨ce.
         m_iLastDescente=tempsActuel-m_iDureeAttente;
     }
     else
@@ -410,7 +410,7 @@ bool CJeu::allMoveFigure(int moveStrafe,bool bas,bool rotation, bool down)
             if (myTerrain.dropFigure()==true)
             {
                 nbLignesFull=myTerrain.findFullLine();
-                myTerrain.findEmptyLine(); //Ne fais pas de points, car les lignes la ont été cassées en vol par le tetris.
+                myTerrain.findEmptyLine(); //Ne fais pas de points, car les lignes la ont Ã©tÃ© cassÃ©es en vol par le tetris.
                 //Jouer eventuellement un son.
                 switch (nbLignesFull)
                 {
@@ -434,7 +434,7 @@ bool CJeu::allMoveFigure(int moveStrafe,bool bas,bool rotation, bool down)
                 }
                 addLignes(nbLignesFull);
 
-                //Vérifions maintenant si le terrain est vide.
+                //VÃ©rifions maintenant si le terrain est vide.
                 //Si c'est le cas, on va le remplir un peu pour rendre le jeu plus marant.
                 if (myTerrain.isEmptyTerrain()==true)
                 {
@@ -454,7 +454,7 @@ bool CJeu::allMoveFigure(int moveStrafe,bool bas,bool rotation, bool down)
 
 void CJeu::deplacerRaquette(const int& iElapsedTime, const int& sens)
 {
-    //On déplace la raquette.
+    //On dÃ©place la raquette.
     if (sens!=0) myRaquette.deplacer(iElapsedTime,sens,myTerrain.GetRect());
     if (modifRaquette!=-1 && modifRaquette+10000<SDL_GetTicks())
     {
@@ -471,29 +471,29 @@ void CJeu::flipFigure()
 
 }
 
-//La gestion de la balle doit prendre en compte les différents éléments du terrain... Pas facile facile...
-//Il faut de plus détruire les briques touchées.
+//La gestion de la balle doit prendre en compte les diffÃ©rents Ã©lÃ©ments du terrain... Pas facile facile...
+//Il faut de plus dÃ©truire les briques touchÃ©es.
 void CJeu::deplacerBalle(const int& iElapsedTime)
 {
     int nbCaseDetruites;
     SDL_Rect* raqRect = myRaquette.GetRect();
     int raqMidX=raqRect->x + raqRect->w/2;
-    //Ajouter ici éventuellement une boucle pour gérer plusieurs balles.
+    //Ajouter ici Ã©ventuellement une boucle pour gÃ©rer plusieurs balles.
 
-    //Il faut gérer les collisions avec les briques, les murs, et la perte des balles.
-    //Tous ceci se fait dans la fonction de déplacement de la balle.
-    //On lui enverra en paramètre le terrain, pour qu'elle puisse procéder a ses test.
+    //Il faut gÃ©rer les collisions avec les briques, les murs, et la perte des balles.
+    //Tous ceci se fait dans la fonction de dÃ©placement de la balle.
+    //On lui enverra en paramÃ¨tre le terrain, pour qu'elle puisse procÃ©der a ses test.
     for (int i=0;i<MAX_BALLES;i++)
     {
         if (myBalle[i].getStatutBalle()==1)
         {
-            //Indique que la balle a été détruite.
+            //Indique que la balle a Ã©tÃ© dÃ©truite.
             if (myBalle[i].deplacer(iElapsedTime,myTerrain,raqRect,mySon,myBonus)==true)
             {
                 m_iNbBalles--;
                 mySon.playEffet(S_PERDU_BALLE);
             }
-            //Indique les destructions que la balle a causée.
+            //Indique les destructions que la balle a causÃ©e.
             if (myTerrain.getBalleDestruction(nbCaseDetruites)==true)
             {
                 mySon.playEffet(S_CASSE_LIGNE);
@@ -524,7 +524,7 @@ void CJeu::deplacerBalle(const int& iElapsedTime)
         }
     }
 
-    //Gestion des bonus est faites en même temps que la gestion des balles.
+    //Gestion des bonus est faites en mÃªme temps que la gestion des balles.
     int bonusObtenu[MAX_BONUS];
     int nbBonus=myBonus.deplacerBonus(bonusObtenu, iElapsedTime, raqRect);
     if (nbBonus>0)
@@ -581,7 +581,7 @@ void CJeu::deplacerBalle(const int& iElapsedTime)
                     flipFigure();
                 break;
                 case B_BLOQUE_STRAFE:
-                    //On bloque la figure latéralement pendant 10 secondes.
+                    //On bloque la figure latÃ©ralement pendant 10 secondes.
                     m_iLastStrafe+=10000;
                 break;
                 case B_SMALL_RAQ:
@@ -718,7 +718,7 @@ void CRaquette::initRaquette(int posX,int posY,int prop,double adX)
     dX=adX;
 }
 
-//Gère les déplacement de raquette.
+//GÃ¨re les dÃ©placement de raquette.
 void CRaquette::deplacer(const int& iElapsedTime, const int& sens, SDL_Rect *terrainRect)
 {
     int x=myRectRaquette.x;

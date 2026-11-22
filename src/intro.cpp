@@ -31,7 +31,7 @@ void CIntro::initIntro(char lang[MAX_LANG][256])
     SDL_Surface* tempTxt=NULL;
     SDL_Rect centrage;
 
-    //On écrit le texte grace à TTF.
+    //On Ã©crit le texte grace Ã  TTF.
     TTF_Font *policeTxt = TTF_OpenFont("D:\\data\\bgothm.ttf", 60);
     SDL_Color couleurTxt = { 0, 0, 0 };
 
@@ -39,7 +39,7 @@ void CIntro::initIntro(char lang[MAX_LANG][256])
 
     m_pMenu=IMG_Load("D:\\data\\images\\menu\\menu.jpg");
 
-    //On charge les images sans texte à l'intérieur
+    //On charge les images sans texte Ã  l'intÃ©rieur
     gd=IMG_Load("D:\\data\\images\\menu\\down_gd.png");
     pt=IMG_Load("D:\\data\\images\\menu\\down_pt.png");
 
