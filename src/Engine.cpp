@@ -155,7 +155,10 @@ void CEngine::Quit()
 
 void CEngine::End()
 {
+#ifndef NXDK
      SDL_Quit();
+#endif
+     //Sur Xbox, retour direct au tableau de bord (voir Platform_Exit).
      Platform_Exit(0);
 }
 

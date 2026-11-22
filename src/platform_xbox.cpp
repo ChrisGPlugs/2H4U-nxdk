@@ -129,8 +129,13 @@ const char* Platform_SavePath(const char* fileName)
 
 void Platform_Exit(int code)
 {
-    // On nxdk, exit() returns to the dashboard.
-    exit(code);
+    // Go straight back to the dashboard. exit() would get there too, but
+    // only after running static destructors and SDL shutdown, which closes
+    // the audio device and can block waiting on the Xbox audio thread.
+    // Everything that needs saving (config, high scores) is already written
+    // and closed by the time the game quits.
+    (void)code;
+    HalReturnToFirmware(HalQuickRebootRoutine);
 }
 
 #endif // NXDK

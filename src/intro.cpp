@@ -161,7 +161,12 @@ void CIntro::drawIntro(SDL_Surface* destination)
         case 69:
         break;
     }
-    SDL_BlitSurface(m_pNoir, NULL, destination, NULL);
+    //Fondu au noir : rien à faire si totalement transparent, simple
+    //remplissage si totalement opaque (évite un mélange plein écran).
+    if (alpha >= 255)
+        SDL_FillRect(destination, NULL, SDL_MapRGB(destination->format, 0, 0, 0));
+    else if (alpha > 0)
+        SDL_BlitSurface(m_pNoir, NULL, destination, NULL);
 }
 
 bool CIntro::calculateFrame()
