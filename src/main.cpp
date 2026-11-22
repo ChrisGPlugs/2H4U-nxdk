@@ -242,9 +242,17 @@ void CMyEngine::QuitScreen()
         TTF_CloseFont(police);
     }
 
-    //Deux fois : avec le double buffer, les deux images contiennent le message.
-    Platform_Present(screen);
-    Platform_Present(screen);
+    //Le message reste affiché un moment : dès que le redémarrage commence,
+    //la console ne montre plus notre image. La musique est coupée pour
+    //confirmer tout de suite que la demande a été prise en compte.
+#ifndef NO_SOUND_2H4U
+    Mix_HaltMusic();
+#endif
+    const Uint32 debut = SDL_GetTicks();
+    do
+    {
+        Platform_Present(screen);   //Remplit aussi les deux tampons d'image.
+    } while (SDL_GetTicks() - debut < 1200);
 }
 
 //Agissements du programme.
