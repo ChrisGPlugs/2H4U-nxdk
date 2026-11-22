@@ -101,6 +101,7 @@ public:
 	void ParamInit(int,int);
 	void AdditionalInit ();
     void AdditionalEnd();
+	void QuitScreen();
 	void Think	    ( const int& iElapsedTime );
 	void Render	    ( SDL_Surface* pDestSurface );
 
@@ -193,6 +194,57 @@ void CMyEngine::AdditionalEnd()
 
     TTF_Quit();
 
+}
+
+//Affiché quand on quitte : sur Xbox, le retour au tableau de bord prend
+//quelques secondes, on montre donc que la demande a bien été prise en compte.
+void CMyEngine::QuitScreen()
+{
+    SDL_Surface* screen = GetSurface();
+    if (screen == NULL) return;
+
+    //On assombrit la dernière image affichée.
+    SDL_Surface* voile = SDL_CreateRGBSurfaceWithFormat(0, screen->w, screen->h, 32, COMPAT_SCREEN_FORMAT);
+    if (voile != NULL)
+    {
+        SDL_FillRect(voile, NULL, SDL_MapRGB(voile->format, 0, 0, 0));
+        SDL_SetSurfaceBlendMode(voile, SDL_BLENDMODE_BLEND);
+        SDL_SetSurfaceAlphaMod(voile, 170);
+        SDL_BlitSurface(voile, NULL, screen, NULL);
+        SDL_FreeSurface(voile);
+    }
+
+    //Puis le message, centré (data/lang/1.txt = français).
+    const char* message = (m_Param.getLangue() == 1) ? "Fermeture..." : "Quitting!";
+    TTF_Font* police = TTF_OpenFont("D:\\data\\bgothm.ttf", 60);
+    if (police != NULL)
+    {
+        SDL_Color blanc = { 255, 255, 255, 255 };
+        SDL_Surface* texte = TTF_RenderText_Blended(police, message, blanc);
+        if (texte != NULL)
+        {
+            //Bandeau noir derrière le texte pour qu'il reste lisible.
+            SDL_Rect bandeau;
+            bandeau.x = 0;
+            bandeau.y = (screen->h - texte->h) / 2 - 20;
+            bandeau.w = screen->w;
+            bandeau.h = texte->h + 40;
+            SDL_FillRect(screen, &bandeau, SDL_MapRGB(screen->format, 0, 0, 0));
+
+            SDL_Rect pos;
+            pos.x = (screen->w - texte->w) / 2;
+            pos.y = (screen->h - texte->h) / 2;
+            pos.w = texte->w;
+            pos.h = texte->h;
+            SDL_BlitSurface(texte, NULL, screen, &pos);
+            SDL_FreeSurface(texte);
+        }
+        TTF_CloseFont(police);
+    }
+
+    //Deux fois : avec le double buffer, les deux images contiennent le message.
+    Platform_Present(screen);
+    Platform_Present(screen);
 }
 
 //Agissements du programme.

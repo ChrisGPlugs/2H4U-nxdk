@@ -90,6 +90,9 @@ public:
 	**/
 	virtual void Render		( SDL_Surface* pDestSurface ) {}
 
+	/** OVERLOADED - Last frame shown when quitting, before cleanup. **/
+	virtual void QuitScreen		() {}
+
 	/** OVERLOADED - Allocated data that should be cleaned up. **/
 	virtual void AdditionalEnd		() {}
 

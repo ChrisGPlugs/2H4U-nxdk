@@ -143,6 +143,7 @@ void CEngine::Start()
         //Pas de Delay : Platform_Present attend la synchro verticale.
 	}
 
+	QuitScreen();    //Message "Quitting!" pendant le retour au tableau de bord.
 	AdditionalEnd();
 	End(); //Lorsque l'on quitte le programme.
 
