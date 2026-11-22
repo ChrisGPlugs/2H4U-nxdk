@@ -22,6 +22,13 @@
 #define PCRTC_START 0x00600800
 
 static uint32_t* g_buffers[2] = { NULL, NULL };
+// Physical addresses for the CRTC. The CPU sees these buffers through the
+// write-combined mapping (0xF0000000+), which the GPU knows nothing about,
+// so the scan-out register must be given the real physical address.
+static ULONG     g_physical[2] = { 0, 0 };
+// False if the scan-out address isn't what we expect: then draw straight into
+// the kernel-programmed framebuffer instead of flipping.
+static bool      g_flip = false;
 static int       g_back = 1;
 static int       g_width = 0, g_height = 0;
 static char      g_modeName[64] = "none";
@@ -74,14 +81,19 @@ bool Platform_VideoInit(int forcedHeight)
                                                            PAGE_READWRITE | PAGE_WRITECOMBINE);
     if (g_buffers[1] == NULL)
         return false;
+    g_physical[0] = MmGetPhysicalAddress(g_buffers[0]);
+    g_physical[1] = MmGetPhysicalAddress(g_buffers[1]);
+    // AvSetDisplayMode has just pointed the CRTC at nxdk's framebuffer.
+    // Only flip if our idea of its address matches the hardware's.
+    g_flip = (VIDEOREG(PCRTC_START) == g_physical[0]);
     memset(g_buffers[0], 0, size);
     memset(g_buffers[1], 0, size);
     XVideoFlushFB();
-    g_back = 1;
+    g_back = g_flip ? 1 : 0;
 
     ScaleRect r = Scaler_Configure(GAME_W, GAME_H, g_width, g_height);
-    snprintf(g_modeName, sizeof(g_modeName), "%dx%d (picture %dx%d)",
-             g_width, g_height, r.w, r.h);
+    snprintf(g_modeName, sizeof(g_modeName), "%dx%d (picture %dx%d, %s)",
+             g_width, g_height, r.w, r.h, g_flip ? "double-buffered" : "single buffer");
     return true;
 }
 
@@ -94,8 +106,11 @@ void Platform_Present(SDL_Surface* frame)
 
     XVideoFlushFB();          // drain write-combine buffers
     XVideoWaitForVBlank();
-    VIDEOREG(PCRTC_START) = (unsigned int)g_buffers[g_back] & 0x7FFFFFFF;
-    g_back ^= 1;
+    if (g_flip)
+    {
+        VIDEOREG(PCRTC_START) = g_physical[g_back];
+        g_back ^= 1;
+    }
 }
 
 const char* Platform_VideoModeName()
