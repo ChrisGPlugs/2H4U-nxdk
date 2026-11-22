@@ -9,12 +9,16 @@ Content of this file is available under GNU Free Documentation License 1.2. :
 http://www.gnu.org/copyleft/fdl.html
 
 We modified the file to make it feet our requirements.
+
+nxdk port: the game draws into an 800x600 surface which the platform layer
+scales to the console's video mode (see platform.h). Input uses the SDL2
+game controller API instead of SDLx's joystick numbering.
 */
 
 #include "Engine.h"
+#include "platform.h"
 
 #ifdef _XBOX
-#	include <xtl.h>
 #	include "XPad.h"
 #endif
 
@@ -22,7 +26,8 @@ We modified the file to make it feet our requirements.
 CEngine::CEngine()
 {
 #ifdef _XBOX
-	OLDLXAXIS = 0;
+	m_pPad = NULL;
+	for (int i = 0; i < 16; i++) m_bPadKey[i] = false;
 #endif
 
 	m_lLastRender   = 0;
@@ -30,8 +35,8 @@ CEngine::CEngine()
 	//m_iFrameLenght  = 15; //Durée en millisecondes d'une frame.
     m_iFrameLenght=0;
 
-	m_iWidth		= 800;
-	m_iHeight		= 600;
+	m_iWidth		= GAME_W;
+	m_iHeight		= GAME_H;
 
 	m_czTitle		= NULL;
 
@@ -47,97 +52,63 @@ CEngine::~CEngine()
 	SDL_Quit();
 }
 
-/** Sets the height and width of the window.
-	@param iWidth The width of the window
-	@param iHeight The height of the window
+/** Creates the 800x600 surface the game draws into.
+	The size is fixed: the platform layer scales it to the real video mode.
 **/
 void CEngine::SetSize(const int& iWidth, const int& iHeight)
 {
-	m_iWidth  = iWidth;
-	m_iHeight = iHeight;
-	m_pScreen = SDL_SetVideoMode( iWidth, iHeight, 32, SDL_HWSURFACE | SDL_DOUBLEBUF | SDL_FULLSCREEN);
+	m_iWidth  = GAME_W;
+	m_iHeight = GAME_H;
+	if (m_pScreen == NULL)
+		m_pScreen = SDL_CreateRGBSurfaceWithFormat(0, GAME_W, GAME_H, 32, COMPAT_SCREEN_FORMAT);
 }
 
 //Même chose que précédemment, mais en plein écran.
 void CEngine::SetFullScreen(const int& iWidth, const int& iHeight)
 {
-    m_iWidth  = iWidth;
-	m_iHeight = iHeight;
-	//A vérifier : l'ancienne surface de m_pScreen est-elle supprimée ?
-	m_pScreen = SDL_SetVideoMode( iWidth, iHeight, 32, SDL_HWSURFACE | SDL_ANYFORMAT | SDL_DOUBLEBUF |SDL_FULLSCREEN);
+	SetSize(iWidth, iHeight);
 }
 
+// The console is always full screen.
 void CEngine::flipFullScreen(bool fullscreen)
 {
-    if (fullscreen==true)
-    {
-        SDL_ShowCursor(false);
-        m_pScreen = SDL_SetVideoMode( m_iWidth, m_iHeight, 32, SDL_HWSURFACE | SDL_ANYFORMAT | SDL_DOUBLEBUF |SDL_FULLSCREEN);
-    }
-    else
-    {
-        SDL_ShowCursor(true);
-        m_pScreen = SDL_SetVideoMode( m_iWidth, m_iHeight, 32, SDL_HWSURFACE | SDL_DOUBLEBUF | SDL_FULLSCREEN);
-    }
 }
-
-#ifdef _XBOX
-	extern void loadScreen();
-#endif
 
 /** Initialize SDL, the window and the additional data. **/
 void CEngine::Init()
 {
-    //+ éventuellement d'autres.
-	#ifdef NO_SOUND_2H4U
-		if ( SDL_Init( SDL_INIT_VIDEO |  SDL_INIT_TIMER ) < 0 )
-	#else
-	if ( SDL_Init( SDL_INIT_VIDEO |  SDL_INIT_TIMER  | SDL_INIT_AUDIO ) < 0 )
-	#endif
+	Uint32 flags = SDL_INIT_TIMER | SDL_INIT_EVENTS | SDL_INIT_GAMECONTROLLER;
+#ifndef NXDK
+	flags |= SDL_INIT_VIDEO;       // host test build opens a window
+#endif
+#ifndef NO_SOUND_2H4U
+	flags |= SDL_INIT_AUDIO;
+#endif
+
+	if ( SDL_Init( flags ) < 0 )
 	{
 		fprintf( stderr, "Impossible d'initialiser SDL: %s\n", SDL_GetError() );
-
-#ifdef _XBOX
-		XLaunchNewImage(NULL, NULL);
-#else
-		exit( 1 );
-#endif
+		Platform_Exit( 1 );
 	}
 
-    //Ligne rajouté, au cas ou le programme est quitté violement (kill).
-    atexit(SDL_Quit);
+	Platform_Init();
 
-#ifdef _XBOX
-	SDL_putenv("SDL_VIDEO_WINDOW_POS=center");
-#else
-    putenv("SDL_VIDEO_WINDOW_POS=center"); //pour centrer la fenêtre
-#endif
-
-    //Chargement des paramètres, afin de choisir si fenêtre ou plein écran
+    //Chargement des paramètres (et choix du mode vidéo).
     ParamInit(m_iWidth,m_iHeight);
 
 	// If we fail, return error.
 	if ( m_pScreen == NULL )
 	{
 		fprintf( stderr, "Impossible de définir la vidéo: %s\n", SDL_GetError() );
-
-#ifdef _XBOX
-		XLaunchNewImage(NULL, NULL);
-#else
-		exit( 1 );
-#endif
+		Platform_Exit( 1 );
 	}
 
 #ifdef _XBOX
-	    //Init for Xbox joy
-	if ( SDL_InitSubSystem( SDL_INIT_JOYSTICK ) < 0 )
-	{	
-        XLaunchNewImage(NULL, NULL);
-	}
-	JOYPAD = SDL_JoystickOpen(0);
-	SDL_JoystickEventState(SDL_ENABLE);
-
-	loadScreen();
+	// The pad is opened when SDL reports it (SDL_CONTROLLERDEVICEADDED),
+	// but grab one now if it is already there.
+	for (int i = 0; i < SDL_NumJoysticks() && m_pPad == NULL; i++)
+		if (SDL_IsGameController(i))
+			m_pPad = SDL_GameControllerOpen(i);
 #endif
 
 	AdditionalInit();
@@ -155,7 +126,7 @@ void CEngine::Start()
 	// Main loop: loop forever.
 	while ( !m_bQuit )
 	{
-		// Handle mouse and keyboard input
+		// Handle controller and keyboard input
 		HandleInput();
 
 		if ( m_bMinimized ) {
@@ -169,7 +140,7 @@ void CEngine::Start()
 			DoRender();
 
 		}
-        //On se passe du Delay, car l'affichage est limité (60 images par secondes)
+        //Pas de Delay : Platform_Present attend la synchro verticale.
 	}
 
 	AdditionalEnd();
@@ -185,16 +156,67 @@ void CEngine::Quit()
 void CEngine::End()
 {
      SDL_Quit();
-
-#ifdef _XBOX
-		XLaunchNewImage(NULL, NULL);
-#else
-     exit(0);
-#endif
+     Platform_Exit(0);
 }
 
 #ifdef _XBOX
-	extern void resize_screen(SDL_Joystick *JOYPAD, SDL_Surface *screen_sfc);
+/** Turns a pad input into game key presses, only when its state changes.
+	iSlot identifies the input, iKey1/iKey2 are the SDLK_ codes it sends.
+**/
+void CEngine::PadKey(int iSlot, bool bDown, int iKey1, int iKey2)
+{
+	if (bDown == m_bPadKey[iSlot])
+		return;
+	m_bPadKey[iSlot] = bDown;
+	if (bDown)
+	{
+		KeyDown(iKey1);
+		if (iKey2) KeyDown(iKey2);
+	}
+	else
+	{
+		KeyUp(iKey1);
+		if (iKey2) KeyUp(iKey2);
+	}
+}
+
+/** Reads the controller once per frame and maps it to the keys the
+	original Xbox port used (see XBOX.README.txt for the controls).
+**/
+void CEngine::HandlePad()
+{
+	if (m_pPad == NULL)
+		return;
+
+	SDL_GameController* p = m_pPad;
+	const int lx = SDL_GameControllerGetAxis(p, SDL_CONTROLLER_AXIS_LEFTX);
+	const int ly = SDL_GameControllerGetAxis(p, SDL_CONTROLLER_AXIS_LEFTY);
+	const int rx = SDL_GameControllerGetAxis(p, SDL_CONTROLLER_AXIS_RIGHTX);
+	const int lt = SDL_GameControllerGetAxis(p, SDL_CONTROLLER_AXIS_TRIGGERLEFT);
+	const int rt = SDL_GameControllerGetAxis(p, SDL_CONTROLLER_AXIS_TRIGGERRIGHT);
+
+	const bool up    = SDL_GameControllerGetButton(p, SDL_CONTROLLER_BUTTON_DPAD_UP)    || ly < -JOY_DEADZONE * 3;
+	const bool down  = SDL_GameControllerGetButton(p, SDL_CONTROLLER_BUTTON_DPAD_DOWN)  || ly >  JOY_DEADZONE * 3;
+	const bool left  = SDL_GameControllerGetButton(p, SDL_CONTROLLER_BUTTON_DPAD_LEFT)  || lx < -JOY_DEADZONE * 3;
+	const bool right = SDL_GameControllerGetButton(p, SDL_CONTROLLER_BUTTON_DPAD_RIGHT) || lx >  JOY_DEADZONE * 3;
+
+	// Paddle: triggers or right stick (j = left, k = right).
+	const bool paddleLeft  = lt > JOY_TRIGGER_THRESHOLD || rx < -JOY_DEADZONE;
+	const bool paddleRight = rt > JOY_TRIGGER_THRESHOLD || rx >  JOY_DEADZONE;
+
+	// Tetromino / menu navigation. Up also rotates (b), like the original port.
+	PadKey(0, up,    SDLK_UP, SDLK_b);
+	PadKey(1, down,  SDLK_DOWN);
+	PadKey(2, left,  SDLK_LEFT);
+	PadKey(3, right, SDLK_RIGHT);
+	PadKey(4, paddleLeft,  SDLK_j);
+	PadKey(5, paddleRight, SDLK_k);
+
+	PadKey(6, SDL_GameControllerGetButton(p, SDL_CONTROLLER_BUTTON_A) != 0,     SDLK_RETURN, SDLK_SPACE);
+	PadKey(7, SDL_GameControllerGetButton(p, SDL_CONTROLLER_BUTTON_B) != 0,     SDLK_b);
+	PadKey(8, SDL_GameControllerGetButton(p, SDL_CONTROLLER_BUTTON_START) != 0, SDLK_p);
+	PadKey(9, SDL_GameControllerGetButton(p, SDL_CONTROLLER_BUTTON_BACK) != 0,  SDLK_ESCAPE);
+}
 #endif
 
 /** Handles all controller inputs.
@@ -202,19 +224,6 @@ void CEngine::End()
 **/
 void CEngine::HandleInput()
 {
-char buffer[1000];
-
-#ifdef _XBOX
-	SDL_PumpEvents();
-	SDL_JoystickUpdate();
-
-	XPAD   = SDL_JoystickGetHat (JOYPAD, 0);
-	LXAXIS  = SDL_JoystickGetAxis(JOYPAD, 0);
-	LYAXIS  = SDL_JoystickGetAxis(JOYPAD, 1);
-	RXAXIS = SDL_JoystickGetAxis(JOYPAD, 2);
-	RYAXIS = SDL_JoystickGetAxis(JOYPAD, 3);
-#endif
-
 	// Poll for events, and handle the ones we care about.
 	SDL_Event event;
 	while ( SDL_PollEvent( &event ) )
@@ -222,120 +231,40 @@ char buffer[1000];
 		switch ( event.type )
 		{
 #ifdef _XBOX
-		case SDL_JOYBUTTONDOWN:
-			switch(event.jbutton.button)
-			{
-			case JOY_BTTN_B:
-				KeyDown(SDLK_b);
-				break;
-			case JOY_BTTN_LTRIG:
-				KeyDown(SDLK_j);
-				break;
-			case JOY_BTTN_RTRIG:
-				KeyDown(SDLK_k);
-				break;
-			case JOY_BTTN_A:
-				KeyDown(SDLK_RETURN);
-				KeyDown(SDLK_SPACE);
-				break;
-			case JOY_BTTN_START:
-				KeyDown(SDLK_p);
-				break;
-			case JOY_BTTN_BACK:
-				KeyDown(SDLK_ESCAPE);
-				break;
-			case JOY_BTTN_RSTICK:
-				resize_screen(JOYPAD, m_pScreen);
-				break;
-			}
+		case SDL_CONTROLLERDEVICEADDED:
+			if (m_pPad == NULL)
+				m_pPad = SDL_GameControllerOpen(event.cdevice.which);
 			break;
-		case SDL_JOYBUTTONUP:
-			switch(event.jbutton.button)
+		case SDL_CONTROLLERDEVICEREMOVED:
+			if (m_pPad != NULL &&
+			    SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(m_pPad)) == event.cdevice.which)
 			{
-			case JOY_BTTN_B:
-				KeyUp(SDLK_b);
-				break;
-			case JOY_BTTN_A:
-				KeyUp(SDLK_SPACE);
-				KeyUp(SDLK_RETURN);
-				break;
-			case JOY_BTTN_LTRIG:
-				KeyUp(SDLK_j);
-				break;
-			case JOY_BTTN_RTRIG:
-				KeyUp(SDLK_k);
-				break;
+				SDL_GameControllerClose(m_pPad);
+				m_pPad = NULL;
+				for (int i = 0; i < SDL_NumJoysticks() && m_pPad == NULL; i++)
+					if (SDL_IsGameController(i))
+						m_pPad = SDL_GameControllerOpen(i);
 			}
 			break;
 #endif
 		case SDL_KEYDOWN:
-			KeyDown( event.key.keysym.sym );
+			if (!event.key.repeat)
+				KeyDown( event.key.keysym.sym );
 			break;
 
 		case SDL_KEYUP:
 			KeyUp( event.key.keysym.sym );
 			break;
 
-		//Rajouter la gestion de 4 ou 5 touches supplémentaires.
-
 		case SDL_QUIT:
 			m_bQuit = true;
 			break;
-
-		//Si on minimize la fenêtre, le jeu passera en pause.
-		case SDL_ACTIVEEVENT:
-			if ( (event.active.state & SDL_APPACTIVE) || (event.active.state & SDL_APPINPUTFOCUS)) {
-				if ( event.active.gain ) {
-					m_bMinimized = false;
-					WindowActive();
-				} else {
-					m_bMinimized = true;
-					WindowInactive();
-				}
-			}
-			break;
 		} // switch
+	} // while (handling input)
 
 #ifdef _XBOX
-	if(RXAXIS < -JOY_DEADZONE)
-	{
-		KeyDown(SDLK_j);
-	}
-	else if((OLDRXAXIS < -JOY_DEADZONE) && (RXAXIS > -JOY_DEADZONE)) 
-		KeyUp(SDLK_j);
-
-	if(RXAXIS > JOY_DEADZONE)
-	{
-		KeyDown(SDLK_k);
-	}
-	else if((OLDRXAXIS > JOY_DEADZONE) && (RXAXIS < JOY_DEADZONE)) 
-		KeyUp(SDLK_k);
-
-	if(XPAD == SDL_HAT_UP)
-		KeyDown(SDLK_b);
-
-	if(XPAD == SDL_HAT_UP || (LYAXIS < -JOY_DEADZONE && LYAXIS < OLDLXAXIS))
-		KeyDown(SDLK_UP);
-
-	if(XPAD == SDL_HAT_DOWN || LYAXIS > JOY_DEADZONE)
-		KeyDown(SDLK_DOWN);
-	else
-		KeyUp(SDLK_DOWN);
-
-	if(XPAD == SDL_HAT_LEFT || LXAXIS < -JOY_DEADZONE)
-		KeyDown(SDLK_LEFT);
-	else
-		KeyUp(SDLK_LEFT);
-
-	if(XPAD == SDL_HAT_RIGHT || LXAXIS > JOY_DEADZONE)
-		KeyDown(SDLK_RIGHT);
-	else
-		KeyUp(SDLK_RIGHT);
-
-	OLDLYAXIS = LYAXIS;
-	OLDRXAXIS = RXAXIS;
+	HandlePad();
 #endif
-	} // while (handling input)
 }
 
 /** Handles the updating routine. **/
@@ -349,8 +278,9 @@ void CEngine::DoThink()
 }
 
 
-//Permet de limiter l'affichage a 60 images par seconde.
-/** Handles the rendering and FPS calculations. **/
+/** Renders a frame and hands it to the platform layer, which scales it
+	to the screen and waits for vertical sync.
+**/
 void CEngine::DoRender()
 {
     long iElapsedRender = SDL_GetTicks() - m_lLastRender;
@@ -360,7 +290,7 @@ void CEngine::DoRender()
         m_lLastRender = SDL_GetTicks();
         Render(m_pScreen);
 
-        SDL_Flip( m_pScreen );
+        Platform_Present( m_pScreen );
     }
 }
 
@@ -371,22 +301,19 @@ void CEngine::DoRender()
 void CEngine::SetTitle(const char* czTitle)
 {
 	m_czTitle = czTitle;
-	SDL_WM_SetCaption( czTitle, NULL );
 }
 
 /** Retrieve the title of the application window.
 	@return The last set windows title as a character array.
-	@remark Only the last set title is returned. If another application has changed the window title, then that title won't be returned.
 **/
 const char* CEngine::GetTitle()
 {
 	return m_czTitle;
 }
 
-//Nécessite SDL_Image. Recoit le chemin d'accès de l'icone en paramètre.
+// No window icon on the console.
 void CEngine::SetIcon(const char* czChemin)
 {
-    SDL_WM_SetIcon(IMG_Load(czChemin), NULL);
 }
 
 /** Retrieve the main screen surface.
@@ -397,4 +324,3 @@ SDL_Surface* CEngine::GetSurface()
 {
 	return m_pScreen;
 }
-

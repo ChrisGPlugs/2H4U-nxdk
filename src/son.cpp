@@ -20,9 +20,6 @@
 
 #include "son.h"
 
-#ifdef _XBOX
-#	include <xtl.h>
-#endif
 
 CSon::CSon()
 {

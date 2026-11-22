@@ -133,28 +133,22 @@ void CMyEngine::ParamInit(int iWidth,int iHeight)
 #endif
 
     //Dans un premier temps, on charge le fichier de paramètres.
-    m_Param.initParam("U:\\config.dat");
+    m_Param.initParam(Platform_SavePath("config.dat"));
 	
 #ifdef _XBOX
 	m_Param.setResolution();
 #endif
 
-    m_Highscore.loadHighscore("U:\\HighScores.dat");
+    m_Highscore.loadHighscore(Platform_SavePath("HighScores.dat"));
 
-        //Puis on fait plein écran ou fenetre suivant le cas.
-        if (m_Param.getFullscreen()==0)
-        {
-            SDL_ShowCursor(true);
-            SetSize( iWidth, iHeight );
-        }
-        else
-        {
-            SDL_ShowCursor(false);
-			int res = m_Param.getResolution();
-			iWidth		= res;
-			iHeight		= (4/3)*res;
-            SetFullScreen( iWidth, iHeight );
-        }
+    //Choix du mode vidéo : automatique (selon la console) ou forcé par
+    //D:\\data\\RESOLUTION. Le jeu dessine toujours en 800x600, le
+    //rendu est ensuite mis à l'échelle (voir platform.h).
+    if (Platform_VideoInit(m_Param.getResolution()))
+    {
+        fprintf(stderr, "Video mode: %s\n", Platform_VideoModeName());
+        SetSize( GAME_W, GAME_H );
+    }
 
 }
 //Appellé par Init.
@@ -200,10 +194,6 @@ void CMyEngine::AdditionalEnd()
     TTF_Quit();
 
 }
-
-#ifdef _XBOX
-	extern void resize_screen(SDL_Joystick *JOYPAD, SDL_Surface *screen_sfc);
-#endif
 
 //Agissements du programme.
 void CMyEngine::Think( const int& iElapsedTime )
@@ -320,7 +310,8 @@ void CMyEngine::Think( const int& iElapsedTime )
                     break;
                     case 3:
 #ifdef _XBOX
-						resize_screen(JOYPAD, m_pScreen);
+                        //Plus de réglage d'écran : l'image est mise à
+                        //l'échelle automatiquement selon le mode vidéo.
 #else
                         m_Param.flipFullscreen();
                         if (m_Param.getFullscreen()==0) flipFullScreen(false);

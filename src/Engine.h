@@ -62,8 +62,12 @@ protected:
 public:
 
 #ifdef _XBOX
-	SDL_Joystick *JOYPAD;
-	int XBUTTON, XPAD, XJOY, RXAXIS, RYAXIS, LXAXIS, LYAXIS, OLDRXAXIS, OLDLXAXIS, OLDLYAXIS, RTRIGSTATE, LTRIGSTATE;
+	/** Xbox controller (SDL2 game controller API). **/
+	SDL_GameController *m_pPad;
+	/** Last frame's state of each virtual key the pad drives, for edge detection. **/
+	bool m_bPadKey[16];
+	void PadKey(int iSlot, bool bDown, int iKey1, int iKey2 = 0);
+	void HandlePad();
 #endif
 
 	CEngine();

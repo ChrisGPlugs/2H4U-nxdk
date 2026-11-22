@@ -5,6 +5,8 @@
 #include <SDL.h>
 
 #define JOY_DEADZONE 4500
+// Analog triggers (0..32767) count as pressed above this.
+#define JOY_TRIGGER_THRESHOLD 8000
 
 ////////////////////
 //Our Xbox buttons//

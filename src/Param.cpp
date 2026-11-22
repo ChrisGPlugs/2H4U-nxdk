@@ -20,13 +20,13 @@
 
 #include "Param.h"
 
-#ifdef _XBOX
-#	include <xtl.h>
-#endif
 
 CParam::CParam()
 {
     m_czChemin=NULL;
+#ifdef _XBOX
+    m_iResolution=0;
+#endif
 }
 
 void CParam::initParam(const char* czChemin)
@@ -52,36 +52,41 @@ void CParam::initParam(const char* czChemin)
         m_iMusique=1; //ON
         m_iFullscreen=0; //ON
         m_iClavier=1; //QWERTY
-        m_iLangue=0; //Français
+        m_iLangue=1; //Français (data/lang/1.txt), premier choix du launcher
         m_bNew=true;
         saveParam();
     }
 }
 
 #ifdef _XBOX
+// D:\data\RESOLUTION picks the video mode.
+//   - missing, or first non-# line is "auto": use whatever the console is set
+//     up for (AV cable + HDTV modes enabled in the dashboard)
+//   - 480 / 720 / 1080: prefer that mode if the console allows it
+// Either way the picture is scaled to fit the screen.
 void CParam::setResolution()
 {
 	const int len = 255;
-    char buffer[len];
-    FILE* filePtr = NULL;
+	char buffer[len];
+	int forced = 0;
+	FILE* filePtr = fopen("D:\\data\\RESOLUTION", "r");
 
-    filePtr = fopen("D:\\data\\RESOLUTION", "r");
-    if (filePtr != NULL)
-    {
-		while(fgets(buffer, len, filePtr)) {
-			if(buffer[0] != '#')
-			{
-				sscanf(buffer, "%d", &m_iResolution);
-				break;
-			}
+	if (filePtr != NULL)
+	{
+		while (fgets(buffer, len, filePtr))
+		{
+			if (buffer[0] == '#' || buffer[0] == '\r' || buffer[0] == '\n')
+				continue;
+			sscanf(buffer, "%d", &forced); // "auto" leaves forced at 0
+			break;
 		}
-    }
-    else
-    {
-		m_iResolution = 720;
+		fclose(filePtr);
 	}
-	
-	fclose(filePtr);
+
+	if (forced == 480 || forced == 720 || forced == 1080)
+		m_iResolution = forced;
+	else
+		m_iResolution = 0;
 }
 #endif
 
@@ -99,10 +104,13 @@ void CParam::getTxtLang(char lang[MAX_LANG][256])
     {
         for (int i=0;i<MAX_LANG;i++)
         {
-            fgets (lang[i], 100 ,fichier);
+            if (fgets (lang[i], 100 ,fichier) == NULL) lang[i][0]='\0';
+            //Les fichiers de langue ont des fins de ligne Windows (\r\n) :
+            //on retire les deux, sinon le \r s'affiche comme un carré.
             l=strlen(lang[i]);
-            lang[i][l-1]='\0';
+            while (l>0 && (lang[i][l-1]=='\n' || lang[i][l-1]=='\r')) lang[i][--l]='\0';
         }
+        fclose(fichier);
     }
     else
     {

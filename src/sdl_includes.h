@@ -22,27 +22,19 @@
 //Uncomment the following line to disables sounds in 2H4U.
 //#define NO_SOUND_2H4U
 
-//IF compiling with MAC
-#ifdef MAC_OS
-
-	#include <SDL_image/SDL_image.h>
-	#include <SDL_ttf/SDL_ttf.h>
-	#include <SDL_mixer/SDL_mixer.h>
-	#include <SDL_getenv.h>
-
-#else
-
-	#include <SDL.h>
-	#include <SDL_image.h>
-	#include <SDL_ttf.h>
-	#ifndef NO_SOUND_2H4U
-		#include <SDL_mixer.h>
-	#endif
-	#include <SDL_getenv.h>
-
+// nxdk port: SDL2 + SDL2_image + SDL_ttf, and a small SDL_mixer
+// replacement (mixer.h). compat.h maps the SDL 1.2 calls the game uses.
+#include <SDL.h>
+#include <SDL_image.h>
+#include <SDL_ttf.h>
+#ifndef NO_SOUND_2H4U
+	#include "mixer.h"
 #endif
 
 #include <cstdlib>
+#include <cstdio>
+
+#include "compat.h"
 
 //Nombre de lignes dans les fichiers de langue
 #define MAX_LANG 19

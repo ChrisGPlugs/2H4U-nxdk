@@ -1,0 +1,22 @@
+# Desktop test build of the nxdk port (Linux/macOS with SDL2, SDL2_image, SDL2_ttf).
+# Uses the Xbox code paths (controller mapping, scaling) so the port can be
+# checked without a console:   make -f Makefile.host && ./2h4u-host
+CXX      ?= g++
+CXXFLAGS ?= -O2 -g
+CXXFLAGS += -D_XBOX -Wall -Wno-unused-variable -Wno-sign-compare $(shell sdl2-config --cflags)
+LIBS      = $(shell sdl2-config --libs) -lSDL2_image -lSDL2_ttf
+
+SRCS = $(filter-out src/platform_xbox.cpp,$(wildcard src/*.cpp))
+OBJS = $(patsubst src/%.cpp,build-host/%.o,$(SRCS))
+
+2h4u-host: $(OBJS)
+	$(CXX) -o $@ $(OBJS) $(LIBS)
+
+build-host/%.o: src/%.cpp src/*.h
+	@mkdir -p build-host
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+clean:
+	rm -rf build-host 2h4u-host
+
+.PHONY: clean

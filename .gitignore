@@ -1,0 +1,16 @@
+# nxdk build
+*.obj
+*.cpp.d
+*.c.d
+main.exe
+main.lib
+bin/
+*.iso
+
+# host test build
+build-host/
+2h4u-host
+
+# runtime files from the host build
+config.dat
+HighScores.dat
