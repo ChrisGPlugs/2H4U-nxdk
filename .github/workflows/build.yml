@@ -3,15 +3,16 @@ name: Build
 on:
   push:
     branches: ['**']
-    tags: ['v*']
   pull_request:
   workflow_dispatch:
+  release:
+    types: [published]   # build and attach the downloads to the release
 
 jobs:
   xbox:
     runs-on: ubuntu-24.04
     permissions:
-      contents: write   # to publish releases from tags
+      contents: write   # to attach downloads to releases
     steps:
       - uses: actions/checkout@v4
 
@@ -39,11 +40,11 @@ jobs:
             dist/2H4UX-xbox.zip
             dist/2H4UX.iso
 
-      - name: Publish release
-        if: startsWith(github.ref, 'refs/tags/v')
+      - name: Attach downloads to the release
+        if: github.event_name == 'release'
         uses: softprops/action-gh-release@v2
         with:
-          name: 2H4UX ${{ github.ref_name }}
+          tag_name: ${{ github.event.release.tag_name }}
           body_path: RELEASE_NOTES.md
           files: |
             dist/2H4UX-xbox.zip
