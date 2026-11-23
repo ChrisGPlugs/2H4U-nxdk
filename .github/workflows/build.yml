@@ -14,7 +14,7 @@ jobs:
     permissions:
       contents: write   # to attach downloads to releases
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install nxdk prerequisites
         run: sudo apt-get update && sudo apt-get install -y clang lld llvm cmake bison flex
@@ -33,7 +33,7 @@ jobs:
           (cd dist && zip -r 2H4UX-xbox.zip 2H4UX)
           cp 2H4UX.iso dist/
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: 2H4UX-xbox
           path: |
