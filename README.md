@@ -1,8 +1,8 @@
-# 2H4U for the original Xbox (nxdk port)
+# 2H4UX: 2H4U for the original Xbox (nxdk port)
 
-**2H4U ("Too Hard For You")** is a mix of Tetris and Breakout by Pierre-Yves Ricau and Pierre Lagouge (2006). You drop tetrominoes at the top of the screen and keep a ball in play with a paddle at the bottom. Neobomb ported it to the original Xbox using the Microsoft XDK and the SDLx libraries.
+**2H4U ("Too Hard For You")** is a mix of Tetris and Breakout by Pierre-Yves Ricau and Pierre Lagouge (2006). You drop tetrominoes at the top of the screen and keep a ball in play with a paddle at the bottom. Neobomb ported it to the original Xbox as **2H4UX**, using the Microsoft XDK and the SDLx libraries.
 
-This repository rebuilds that Xbox port with the open-source [nxdk](https://github.com/XboxDev/nxdk). It can be built and shared without the Microsoft XDK.
+This repository rebuilds 2H4UX with the open-source [nxdk](https://github.com/XboxDev/nxdk). It can be built and shared without the Microsoft XDK.
 
 ## What's different from the original Xbox release
 
@@ -54,8 +54,8 @@ make NXDK_DIR=../nxdk
 
 This produces:
 
-- `bin/`, which contains `default.xbe` and `data/`. Copy the whole folder to the Xbox (for example to `E:\Games\2H4U\`).
-- `2H4U.iso`, a disc image for burning or for the xemu emulator.
+- `bin/`, which contains `default.xbe` and `data/`. Copy the whole folder to the Xbox (for example to `E:\Games\2H4UX\`).
+- `2H4UX.iso`, a disc image for burning or for the xemu emulator.
 
 GitHub Actions builds both on every push. Download them from the run's **Artifacts**.
 

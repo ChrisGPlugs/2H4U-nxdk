@@ -1,13 +1,13 @@
-# nxdk build of 2H4U for the original Xbox.
+# nxdk build of 2H4UX (2H4U) for the original Xbox.
 #
 #   1. Get nxdk:  git clone --recursive https://github.com/XboxDev/nxdk.git
 #   2. Build:     make NXDK_DIR=/path/to/nxdk
 #
-# Output: bin/ (default.xbe + data/) ready to copy to the Xbox, and 2H4U.iso.
+# Output: bin/ (default.xbe + data/) ready to copy to the Xbox, and 2H4UX.iso.
 
-XBE_TITLE   = 2H4U
+XBE_TITLE   = 2H4UX
 TITLE_ID    = 32483455
-ISO_NAME    = 2H4U.iso
+ISO_NAME    = 2H4UX.iso
 
 NXDK_DIR   ?= $(CURDIR)/../nxdk
 NXDK_SDL    = y

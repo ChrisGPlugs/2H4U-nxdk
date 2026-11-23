@@ -22,7 +22,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: 2H4U-xbox
+          name: 2H4UX-xbox
           path: |
             bin/
-            2H4U.iso
+            2H4UX.iso
