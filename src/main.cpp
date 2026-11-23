@@ -251,7 +251,7 @@ void CMyEngine::QuitScreen()
     const Uint32 debut = SDL_GetTicks();
     do
     {
-        Platform_Present(screen);   //Remplit aussi les deux tampons d'image.
+        Platform_Present(screen);
     } while (SDL_GetTicks() - debut < 1200);
 }
 

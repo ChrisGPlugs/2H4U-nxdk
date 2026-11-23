@@ -62,7 +62,7 @@ HOST_OUTPUT=1280x720 ./2h4u-host      # simulate an output resolution
 
 | File | Role |
 | --- | --- |
-| `src/platform_xbox.cpp` | Picks the video mode with nxdk's `XVideoSetMode`, double-buffers the framebuffer, mounts `E:` for saves. |
+| `src/platform_xbox.cpp` | Picks the video mode with nxdk's `XVideoSetMode`, draws each frame into the framebuffer right after vblank, mounts `E:` for saves and shuts the hardware down cleanly on quit. |
 | `src/scaler.cpp` | Scales the 800×600 frame to the screen: nearest-neighbour up, bilinear down. |
 | `src/mixer.cpp` | Small replacement for the parts of SDL_mixer the game uses (nxdk has no SDL_mixer). Plays the WAV effects and streams the MP3 music, decoded with [dr_mp3](https://github.com/mackron/dr_libs). |
 | `src/compat.h` | Maps the SDL 1.2 calls the game uses onto SDL2. |
