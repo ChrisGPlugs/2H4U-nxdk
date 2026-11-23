@@ -159,6 +159,17 @@ int Mix_OpenAudio(int frequency, Uint16, int, int chunksize)
     g_device = SDL_OpenAudioDevice(NULL, 0, &want, &g_spec, SDL_AUDIO_ALLOW_FREQUENCY_CHANGE);
     if (!g_device) return -1;
     memset(g_channels, 0, sizeof(g_channels));
+#ifdef NXDK
+    // nxdk cold-resets the AC97 codec but never sets its mixer. Per the AC97
+    // spec the master and PCM-out volumes come out of reset muted; the real
+    // Xbox plays anyway, but xemu's emulated codec honours the mute and stays
+    // silent. Set both to 0 dB, unmuted (register offsets from the AC97 spec).
+    {
+        volatile Uint16* nam = (volatile Uint16*)0xFEC00000;
+        nam[0x02 / 2] = 0x0000;   // Master volume
+        nam[0x18 / 2] = 0x0808;   // PCM out volume
+    }
+#endif
     SDL_PauseAudioDevice(g_device, 0);
     return 0;
 }
