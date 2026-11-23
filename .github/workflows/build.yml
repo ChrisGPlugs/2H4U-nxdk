@@ -2,12 +2,16 @@ name: Build
 
 on:
   push:
+    branches: ['**']
+    tags: ['v*']
   pull_request:
   workflow_dispatch:
 
 jobs:
   xbox:
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write   # to publish releases from tags
     steps:
       - uses: actions/checkout@v4
 
@@ -20,9 +24,27 @@ jobs:
       - name: Build
         run: make NXDK_DIR=$GITHUB_WORKSPACE/../nxdk -j$(nproc)
 
+      - name: Package
+        run: |
+          mkdir -p dist/2H4UX
+          cp -r bin/. dist/2H4UX/
+          cp README.md dist/2H4UX/
+          (cd dist && zip -r 2H4UX-xbox.zip 2H4UX)
+          cp 2H4UX.iso dist/
+
       - uses: actions/upload-artifact@v4
         with:
           name: 2H4UX-xbox
           path: |
-            bin/
-            2H4UX.iso
+            dist/2H4UX-xbox.zip
+            dist/2H4UX.iso
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: 2H4UX ${{ github.ref_name }}
+          body_path: RELEASE_NOTES.md
+          files: |
+            dist/2H4UX-xbox.zip
+            dist/2H4UX.iso
