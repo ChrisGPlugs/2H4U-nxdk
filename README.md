@@ -33,6 +33,16 @@ This repository rebuilds that Xbox port with the open-source [nxdk](https://gith
 | Start | Pause |
 | Back | Back / exit |
 
+## Emulators
+
+The port is developed and tested on real hardware. The [xemu](https://xemu.app) emulator is not a supported target, and results there vary with the BIOS image:
+
+- The picture strobes or shows the wrong buffer, because of how xemu treats the framebuffer swap the game does on vblank.
+- There is no sound.
+- Some setups run slowly.
+
+Drawing straight into a single framebuffer fixed the strobing in xemu, but it added visible banding during fades on both xemu and real hardware, so it was reverted.
+
 ## Building
 
 You need the [nxdk prerequisites](https://github.com/XboxDev/nxdk/wiki/Install-the-Prerequisites): clang, lld, llvm, make, cmake, bison and flex.
