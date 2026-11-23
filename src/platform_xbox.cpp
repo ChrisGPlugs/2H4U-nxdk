@@ -19,6 +19,7 @@
 // original 2H4UX release, so existing saves show up under the same game).
 #define SAVE_DIR "E:\\UDATA\\32483455\\"
 
+#define PCRTC_START       0x00600800
 #define PCRTC_INTR        0x00600100
 #define PCRTC_INTR_EN     0x00600140
 #define NV_PMC_INTR_EN_0  0x00000140
@@ -32,11 +33,15 @@
 
 extern "C" void usbh_core_deinit(void);
 
-// The game draws straight into nxdk's framebuffer, which AvSetDisplayMode
-// pointed the CRTC at; the scan-out address is never touched. (Flipping
-// between two buffers by rewriting PCRTC_START worked on hardware but not in
-// xemu, which can keep showing older GPU surfaces at those addresses.)
-static uint32_t* g_fb = NULL;
+static uint32_t* g_buffers[2] = { NULL, NULL };
+// Physical addresses for the CRTC. The CPU sees these buffers through the
+// write-combined mapping (0xF0000000+), which the GPU knows nothing about,
+// so the scan-out register must be given the real physical address.
+static ULONG     g_physical[2] = { 0, 0 };
+// False if the scan-out address isn't what we expect: then draw straight into
+// the kernel-programmed framebuffer instead of flipping.
+static bool      g_flip = false;
+static int       g_back = 1;
 static int       g_width = 0, g_height = 0;
 static char      g_modeName[64] = "none";
 
@@ -81,27 +86,43 @@ bool Platform_VideoInit(int forcedHeight)
     if (!ok)
         return false;
 
-    g_fb = (uint32_t*)XVideoGetFB();
-    memset(g_fb, 0, (size_t)g_width * g_height * 4);
+    // Double buffering: nxdk's framebuffer plus one more of the same size.
+    const size_t size = (size_t)g_width * g_height * 4;
+    g_buffers[0] = (uint32_t*)XVideoGetFB();
+    g_buffers[1] = (uint32_t*)MmAllocateContiguousMemoryEx(size, 0, 0x7FFFFFFF, 0x1000,
+                                                           PAGE_READWRITE | PAGE_WRITECOMBINE);
+    if (g_buffers[1] == NULL)
+        return false;
+    g_physical[0] = MmGetPhysicalAddress(g_buffers[0]);
+    g_physical[1] = MmGetPhysicalAddress(g_buffers[1]);
+    // AvSetDisplayMode has just pointed the CRTC at nxdk's framebuffer.
+    // Only flip if our idea of its address matches the hardware's.
+    g_flip = (VIDEOREG(PCRTC_START) == g_physical[0]);
+    memset(g_buffers[0], 0, size);
+    memset(g_buffers[1], 0, size);
     XVideoFlushFB();
+    g_back = g_flip ? 1 : 0;
 
     ScaleRect r = Scaler_Configure(GAME_W, GAME_H, g_width, g_height);
-    snprintf(g_modeName, sizeof(g_modeName), "%dx%d (picture %dx%d)",
-             g_width, g_height, r.w, r.h);
+    snprintf(g_modeName, sizeof(g_modeName), "%dx%d (picture %dx%d, %s)",
+             g_width, g_height, r.w, r.h, g_flip ? "double-buffered" : "single buffer");
     return true;
 }
 
 void Platform_Present(SDL_Surface* frame)
 {
-    // Wait for vblank first, then scale straight into the visible framebuffer.
-    // The scaler fills the screen top to bottom in a few milliseconds, far
-    // faster than the ~16 ms the display takes to scan it out, so it stays
-    // ahead of the beam and the new frame doesn't tear.
-    XVideoWaitForVBlank();
     if (SDL_MUSTLOCK(frame)) SDL_LockSurface(frame);
-    Scaler_Run((const uint32_t*)frame->pixels, frame->pitch / 4, g_fb, g_width);
+    Scaler_Run((const uint32_t*)frame->pixels, frame->pitch / 4,
+               g_buffers[g_back], g_width);
     if (SDL_MUSTLOCK(frame)) SDL_UnlockSurface(frame);
+
     XVideoFlushFB();          // drain write-combine buffers
+    XVideoWaitForVBlank();
+    if (g_flip)
+    {
+        VIDEOREG(PCRTC_START) = g_physical[g_back];
+        g_back ^= 1;
+    }
 }
 
 const char* Platform_VideoModeName()
@@ -141,10 +162,12 @@ static void quiesceHardware()
         SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER | SDL_INIT_JOYSTICK);
     usbh_core_deinit();
 
-    // Video: no vblank interrupts.
+    // Video: no vblank interrupts, and show nxdk's own framebuffer again.
     VIDEOREG(PCRTC_INTR_EN) = 0;
     VIDEOREG(PCRTC_INTR) = 1;
     VIDEOREG(NV_PMC_INTR_EN_0) = 0;
+    if (g_flip)
+        VIDEOREG(PCRTC_START) = g_physical[0];
 }
 
 void Platform_Exit(int code)
