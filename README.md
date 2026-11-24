@@ -4,6 +4,8 @@
 
 This repository rebuilds 2H4UX with the open-source [nxdk](https://github.com/XboxDev/nxdk). It can be built and shared without the Microsoft XDK.
 
+![Game screenshot](/2H4UX-xbox.png)
+
 ## What's different from the original Xbox release
 
 - **Automatic resolution.** The game uses whatever video mode the console is set up for. That depends on the AV cable and the HDTV modes enabled in the dashboard. It tries 720p, then 1080i, then 800×600 over VGA, then 480p, then 480i/PAL. You no longer need to edit a text file.
