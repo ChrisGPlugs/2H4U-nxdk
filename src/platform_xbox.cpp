@@ -272,7 +272,10 @@ static void diagLog(const char* fmt, ...)
     va_start(ap, fmt);
     vsnprintf(line, sizeof(line), fmt, ap);
     va_end(ap);
-    fprintf(f, "[%7.2f] %s\n", SDL_GetTicks() / 1000.0, line);
+    // No %f: nxdk's printf (PDCLib) does not support floating point and
+    // misreads every argument after one.
+    const Uint32 t = SDL_GetTicks();
+    fprintf(f, "[%5lu.%03lu] %s\n", (unsigned long)(t / 1000), (unsigned long)(t % 1000), line);
     fclose(f);
     g_logLines++;
 }
@@ -384,12 +387,15 @@ void Platform_DiagOverlay(SDL_Surface* screen)
     snprintf(text[1], 200, "present %s   PCRTC now 0x%08lX  init 0x%08lX  pre 0x%08lX  fb0 0x%08lX fb1 0x%08lX",
              presentName(g_presentMode), (ULONG)VIDEOREG(PCRTC_START), g_initPcrtc, g_preModePcrtc,
              g_physical[0], g_physical[1]);
-    snprintf(text[2], 200, "frame %.1f ms (%.0f fps)   scale %.1f ms",
-             g_frameMsAvg, g_frameMsAvg > 0 ? 1000.0 / g_frameMsAvg : 0.0, g_scaleMsAvg);
-    snprintf(text[3], 200, "audio %d Hz x%d  mixer callbacks %u (%.0f/s)",
-             Mix_DiagFreq(), Mix_DiagSamples(), Mix_DiagCallbacks(), callbacksPerSec);
-    snprintf(text[4], 200, "AC97 CR 0x%02X SR 0x%04X CIV %d LVI %d PICB %d  CIV moves %.0f/s",
-             AC97_MMIO[0x11B], AC97_NABM16(0x116), civ, AC97_MMIO[0x115], AC97_NABM16(0x118), civPerSec);
+    // Integers only (see diagLog): tenths of a millisecond.
+    const int frame10 = (int)(g_frameMsAvg * 10.0), scale10 = (int)(g_scaleMsAvg * 10.0);
+    const int fps = g_frameMsAvg > 0 ? (int)(1000.0 / g_frameMsAvg + 0.5) : 0;
+    snprintf(text[2], 200, "frame %d.%d ms (%d fps)   scale %d.%d ms",
+             frame10 / 10, frame10 % 10, fps, scale10 / 10, scale10 % 10);
+    snprintf(text[3], 200, "audio %d Hz x%d  mixer callbacks %u (%d/s)",
+             Mix_DiagFreq(), Mix_DiagSamples(), Mix_DiagCallbacks(), (int)callbacksPerSec);
+    snprintf(text[4], 200, "AC97 CR 0x%02X SR 0x%04X CIV %d LVI %d PICB %d  CIV moves %d/s",
+             AC97_MMIO[0x11B], AC97_NABM16(0x116), civ, AC97_MMIO[0x115], AC97_NABM16(0x118), (int)civPerSec);
     snprintf(text[5], 200, "codec master 0x%04X  pcm 0x%04X  pwr 0x%04X  vendor %04X%04X  unmute %s",
              AC97_NAM16(0x02), AC97_NAM16(0x18), AC97_NAM16(0x26), AC97_NAM16(0x7C), AC97_NAM16(0x7E),
              g_audioUnmuted ? "ON" : "off");
