@@ -223,15 +223,22 @@ int Mix_OpenAudio(int, Uint16, int, int)
     g_spec.samples = POLL_FRAMES;
     memset(g_channels, 0, sizeof(g_channels));
 
-    for (int i = 0; i < POLL_BUFFERS; i++)
+    // The game opens and closes audio around every match; set the hardware
+    // up only once and just pause/resume afterwards.
+    static bool hardwareReady = false;
+    if (!hardwareReady)
     {
-        g_dmaBuf[i] = (unsigned char*)MmAllocateContiguousMemoryEx(POLL_FRAMES * 4, 0, 0xFFFFFFFF, 0,
-                                                                   PAGE_READWRITE | PAGE_WRITECOMBINE);
-        if (!g_dmaBuf[i]) return -1;
-        memset(g_dmaBuf[i], 0, POLL_FRAMES * 4);
+        for (int i = 0; i < POLL_BUFFERS; i++)
+        {
+            g_dmaBuf[i] = (unsigned char*)MmAllocateContiguousMemoryEx(POLL_FRAMES * 4, 0, 0xFFFFFFFF, 0,
+                                                                       PAGE_READWRITE | PAGE_WRITECOMBINE);
+            if (!g_dmaBuf[i]) return -1;
+            memset(g_dmaBuf[i], 0, POLL_FRAMES * 4);
+        }
+        g_lock = SDL_CreateMutex();
+        XAudioInit(16, 2, NULL, NULL);
+        hardwareReady = true;
     }
-    g_lock = SDL_CreateMutex();
-    XAudioInit(16, 2, NULL, NULL);
     g_device = 1;
     for (int i = 0; i < POLL_AHEAD; i++) queueOne();
     XAudioPlay();
