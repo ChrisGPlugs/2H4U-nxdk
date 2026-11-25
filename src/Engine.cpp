@@ -220,6 +220,16 @@ void CEngine::HandlePad()
 	PadKey(7, SDL_GameControllerGetButton(p, SDL_CONTROLLER_BUTTON_B) != 0,     SDLK_b);
 	PadKey(8, SDL_GameControllerGetButton(p, SDL_CONTROLLER_BUTTON_START) != 0, SDLK_p);
 	PadKey(9, SDL_GameControllerGetButton(p, SDL_CONTROLLER_BUTTON_BACK) != 0,  SDLK_ESCAPE);
+
+#ifdef DIAG
+	// Stick clicks: switch how frames are shown / toggle the codec mute.
+	static bool l3 = false, r3 = false;
+	const bool nl3 = SDL_GameControllerGetButton(p, SDL_CONTROLLER_BUTTON_LEFTSTICK) != 0;
+	const bool nr3 = SDL_GameControllerGetButton(p, SDL_CONTROLLER_BUTTON_RIGHTSTICK) != 0;
+	if (nl3 && !l3) Platform_DiagCycleVideo();
+	if (nr3 && !r3) Platform_DiagToggleAudio();
+	l3 = nl3; r3 = nr3;
+#endif
 }
 #endif
 
@@ -293,6 +303,9 @@ void CEngine::DoRender()
     {
         m_lLastRender = SDL_GetTicks();
         Render(m_pScreen);
+#ifdef DIAG
+        Platform_DiagOverlay(m_pScreen);
+#endif
 
         Platform_Present( m_pScreen );
     }

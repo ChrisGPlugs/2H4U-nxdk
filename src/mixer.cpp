@@ -33,7 +33,7 @@ struct Channel
     int        loops;    // -1 = forever
 };
 
-SDL_AudioDeviceID g_device = 0;
+SDL_AudioDeviceID g_device = 0;     // nonzero while audio is open
 SDL_AudioSpec     g_spec;
 Channel           g_channels[MIX_CHANNELS];
 
@@ -89,8 +89,11 @@ void readMusic(Sint16* out, int samples)
     }
 }
 
+volatile unsigned g_callbacks = 0;
+
 void SDLCALL audioCallback(void*, Uint8* stream, int len)
 {
+    g_callbacks++;
     const int samples = len / (int)sizeof(Sint16);
     if (samples > g_accumSamples)
     {
@@ -136,7 +139,127 @@ void SDLCALL audioCallback(void*, Uint8* stream, int len)
     }
 }
 
+#if defined(NXDK) && defined(AUDIO_POLL)
+// ---------------------------------------------------------------------------
+// Polled AC97 output (make AUDIO_POLL=1).
+//
+// nxdk's SDL audio driver only sends more sound when the AC97 "buffer done"
+// interrupt fires. xemu never delivers that interrupt for nxdk programs
+// (xemu issue #1529), so audio stalls there. Instead, a thread checks the
+// DMA engine's position every couple of milliseconds and keeps a few
+// buffers queued with XAudioProvideSamples(). No interrupt is needed, so
+// the same code works on hardware and in xemu.
+// ---------------------------------------------------------------------------
+}  // namespace
+#include <hal/audio.h>
+#include <windows.h>
+#include <xboxkrnl/xboxkrnl.h>
+namespace {
+
+const int POLL_FRAMES  = 1024;          // per buffer: ~21 ms at 48 kHz
+const int POLL_BUFFERS = 6;             // ring of DMA buffers
+const int POLL_AHEAD   = 3;             // buffers kept queued after the playing one
+#define AC97_REG8(off) (*(volatile unsigned char*)(0xFEC00000 + (off)))
+
+SDL_mutex*      g_lock = NULL;
+SDL_Thread*     g_pollThread = NULL;
+volatile bool   g_pollRun = false;
+unsigned char*  g_dmaBuf[POLL_BUFFERS];
+int             g_nextBuf = 0;
+
+void lockAudio()   { if (g_lock) SDL_LockMutex(g_lock); }
+void unlockAudio() { if (g_lock) SDL_UnlockMutex(g_lock); }
+
+void SDLCALL audioCallback(void*, Uint8* stream, int len);
+
+void queueOne()
+{
+    unsigned char* buf = g_dmaBuf[g_nextBuf];
+    g_nextBuf = (g_nextBuf + 1) % POLL_BUFFERS;
+    lockAudio();
+    audioCallback(NULL, buf, POLL_FRAMES * 4);
+    unlockAudio();
+    XAudioProvideSamples(buf, POLL_FRAMES * 4, 0);
+}
+
+int SDLCALL pollThread(void*)
+{
+    SDL_SetThreadPriority(SDL_THREAD_PRIORITY_HIGH);
+    while (g_pollRun)
+    {
+        const unsigned char civ = AC97_REG8(0x114);
+        const unsigned char lvi = AC97_REG8(0x115);
+        const bool halted = (AC97_REG8(0x116) & 1) != 0;   // DMA controller halted
+        int ahead = (lvi - civ) & 31;
+        if (halted)
+        {
+            // Ran dry (or not started): refill and restart the engine.
+            for (int i = 0; i < POLL_AHEAD; i++) queueOne();
+            XAudioPlay();
+        }
+        else
+        {
+            while (ahead < POLL_AHEAD) { queueOne(); ahead++; }
+        }
+        Sleep(2);
+    }
+    return 0;
+}
+#else
+void lockAudio()   { SDL_LockAudioDevice(g_device); }
+void unlockAudio() { SDL_UnlockAudioDevice(g_device); }
+#endif
+
 } // namespace
+
+#if defined(NXDK) && defined(AUDIO_POLL)
+int Mix_OpenAudio(int, Uint16, int, int)
+{
+    if (g_device) return 0;
+    SDL_zero(g_spec);
+    g_spec.freq = 48000;
+    g_spec.format = AUDIO_S16SYS;
+    g_spec.channels = 2;
+    g_spec.samples = POLL_FRAMES;
+    memset(g_channels, 0, sizeof(g_channels));
+
+    for (int i = 0; i < POLL_BUFFERS; i++)
+    {
+        g_dmaBuf[i] = (unsigned char*)MmAllocateContiguousMemoryEx(POLL_FRAMES * 4, 0, 0xFFFFFFFF, 0,
+                                                                   PAGE_READWRITE | PAGE_WRITECOMBINE);
+        if (!g_dmaBuf[i]) return -1;
+        memset(g_dmaBuf[i], 0, POLL_FRAMES * 4);
+    }
+    g_lock = SDL_CreateMutex();
+    XAudioInit(16, 2, NULL, NULL);
+    g_device = 1;
+    for (int i = 0; i < POLL_AHEAD; i++) queueOne();
+    XAudioPlay();
+
+    g_pollRun = true;
+    g_pollThread = SDL_CreateThread(pollThread, "audio-poll", NULL);
+    return g_pollThread ? 0 : -1;
+}
+
+void Mix_CloseAudio(void)
+{
+    if (!g_device) return;
+    g_pollRun = false;
+    if (g_pollThread) SDL_WaitThread(g_pollThread, NULL);
+    g_pollThread = NULL;
+    XAudioPause();
+    g_device = 0;
+}
+
+// Called on quit, before handing back to the dashboard.
+void Mix_HaltOutput(void)
+{
+    g_pollRun = false;
+    if (g_pollThread) SDL_WaitThread(g_pollThread, NULL);
+    g_pollThread = NULL;
+}
+#else
+void Mix_HaltOutput(void) {}
 
 int Mix_OpenAudio(int frequency, Uint16, int, int chunksize)
 {
@@ -172,6 +295,7 @@ void Mix_CloseAudio(void)
     free(g_musicBuf); g_musicBuf = NULL;
     g_accumSamples = 0;
 }
+#endif
 
 Mix_Chunk* Mix_LoadWAV(const char* file)
 {
@@ -207,10 +331,10 @@ Mix_Chunk* Mix_LoadWAV(const char* file)
 void Mix_FreeChunk(Mix_Chunk* chunk)
 {
     if (!chunk) return;
-    if (g_device) SDL_LockAudioDevice(g_device);
+    if (g_device) lockAudio();
     for (int c = 0; c < MIX_CHANNELS; c++)
         if (g_channels[c].chunk == chunk) g_channels[c].chunk = NULL;
-    if (g_device) SDL_UnlockAudioDevice(g_device);
+    if (g_device) unlockAudio();
     free(chunk->abuf);
     free(chunk);
 }
@@ -218,7 +342,7 @@ void Mix_FreeChunk(Mix_Chunk* chunk)
 int Mix_PlayChannel(int channel, Mix_Chunk* chunk, int loops)
 {
     if (!g_device || !chunk || chunk->alen == 0) return -1;
-    SDL_LockAudioDevice(g_device);
+    lockAudio();
     if (channel < 0 || channel >= MIX_CHANNELS)
     {
         channel = -1;
@@ -231,7 +355,7 @@ int Mix_PlayChannel(int channel, Mix_Chunk* chunk, int loops)
         g_channels[channel].pos = 0;
         g_channels[channel].loops = loops;
     }
-    SDL_UnlockAudioDevice(g_device);
+    unlockAudio();
     return channel;
 }
 
@@ -261,9 +385,9 @@ Mix_Music* Mix_LoadMUS(const char* file)
 void Mix_FreeMusic(Mix_Music* music)
 {
     if (!music) return;
-    if (g_device) SDL_LockAudioDevice(g_device);
+    if (g_device) lockAudio();
     if (g_music == music) g_music = NULL;
-    if (g_device) SDL_UnlockAudioDevice(g_device);
+    if (g_device) unlockAudio();
     SDL_FreeAudioStream(music->stream);
     drmp3_uninit(&music->mp3);
     free(music->fileData);
@@ -273,13 +397,13 @@ void Mix_FreeMusic(Mix_Music* music)
 int Mix_PlayMusic(Mix_Music* music, int loops)
 {
     if (!g_device || !music) return -1;
-    SDL_LockAudioDevice(g_device);
+    lockAudio();
     drmp3_seek_to_pcm_frame(&music->mp3, 0);
     SDL_AudioStreamClear(music->stream);
     g_music = music;
     g_musicLoops = loops;   // -1 = forever, like SDL_mixer
     g_musicPaused = false;
-    SDL_UnlockAudioDevice(g_device);
+    unlockAudio();
     return 0;
 }
 
@@ -289,13 +413,19 @@ void Mix_ResumeMusic(void) { g_musicPaused = false; }
 void Mix_HaltMusic(void)
 {
     if (!g_device) return;
-    SDL_LockAudioDevice(g_device);
+    lockAudio();
     g_music = NULL;
     g_musicPaused = false;
-    SDL_UnlockAudioDevice(g_device);
+    unlockAudio();
 }
 
 int Mix_PlayingMusic(void)
 {
     return g_music != NULL ? 1 : 0;
 }
+
+#ifdef DIAG
+unsigned Mix_DiagCallbacks() { return g_callbacks; }
+int      Mix_DiagFreq()      { return g_device ? g_spec.freq : 0; }
+int      Mix_DiagSamples()   { return g_device ? g_spec.samples : 0; }
+#endif

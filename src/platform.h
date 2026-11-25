@@ -38,4 +38,11 @@ const char* Platform_SavePath(const char* fileName);
 // Leave the game (back to the dashboard on Xbox).
 void        Platform_Exit(int code);
 
+#ifdef DIAG
+// Diagnostic build only (make DIAG=1).
+void        Platform_DiagCycleVideo();
+void        Platform_DiagToggleAudio();
+void        Platform_DiagOverlay(SDL_Surface* screen);
+#endif
+
 #endif

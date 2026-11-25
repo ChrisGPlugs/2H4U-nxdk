@@ -13,6 +13,17 @@ NXDK_DIR   ?= $(CURDIR)/../nxdk
 NXDK_SDL    = y
 NXDK_CXX    = y
 
+# Test builds:  make DIAG=1        on-screen diagnostics + E:\UDATA\32483455\diag.txt
+#               make AUDIO_POLL=1  feed the AC97 by polling instead of interrupts
+ifeq ($(DIAG),1)
+XBE_TITLE   = 2H4UX\ DIAG
+ISO_NAME    = 2H4UX-diag.iso
+CXXFLAGS   += -DDIAG
+endif
+ifeq ($(AUDIO_POLL),1)
+CXXFLAGS   += -DAUDIO_POLL
+endif
+
 SRCS        = $(filter-out %/platform_host.cpp,$(wildcard $(CURDIR)/src/*.cpp))
 CXXFLAGS   += -D_XBOX -DNXDK -O2 -Wno-unused-variable -Wno-sign-compare \
               -Wno-writable-strings -Wno-deprecated-declarations

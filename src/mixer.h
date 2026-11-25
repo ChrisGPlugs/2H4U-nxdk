@@ -40,4 +40,8 @@ void       Mix_ResumeMusic(void);
 void       Mix_HaltMusic(void);
 int        Mix_PlayingMusic(void);
 
+// Stop feeding the audio hardware (used on quit). No-op unless built with
+// AUDIO_POLL=1.
+void       Mix_HaltOutput(void);
+
 #endif
